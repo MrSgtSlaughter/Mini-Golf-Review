@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⛳ Mini Golf Masters – Ancient China Edition</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d1a0c;font-family:'DM Mono',monospace;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;user-select:none}
+.screen{display:none;flex-direction:column;align-items:center}
+.screen.active{display:flex}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+@keyframes pop{0%{transform:scale(.7);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%,75%{transform:translateX(-7px)}50%{transform:translateX(7px)}}
+@keyframes glow{0%,100%{text-shadow:3px 4px 0 #a8960a,0 0 30px rgba(253,231,76,.2)}50%{text-shadow:3px 4px 0 #a8960a,0 0 55px rgba(253,231,76,.5)}}
+/* TITLE */
+#titleScreen{gap:14px;animation:fadeUp .6s ease;background:rgba(0,0,0,.65);border:1px solid rgba(76,175,80,.2);border-radius:24px;padding:28px 34px;min-width:400px}
+.flag-deco{font-size:44px;line-height:1;text-align:center}
+.bigTitle{font-family:'Playfair Display',serif;font-size:clamp(32px,5vw,56px);font-weight:900;color:#fde74c;text-shadow:3px 4px 0 #a8960a;text-align:center;line-height:1.1;animation:glow 3s infinite}
+.tagline{font-size:11px;letter-spacing:5px;color:#7ec87e;text-transform:uppercase;text-align:center}
+.sub-tag{font-size:9px;letter-spacing:3px;color:rgba(126,200,126,.5);text-transform:uppercase;text-align:center}
+.section-label{font-size:10px;letter-spacing:4px;color:#7ec87e;text-transform:uppercase;text-align:center}
+.name-input{width:100%;padding:11px 16px;background:rgba(76,175,80,.08);border:1.5px solid rgba(76,175,80,.35);border-radius:10px;color:#fde74c;font-family:'DM Mono',monospace;font-size:15px;outline:none;transition:border-color .2s;text-align:center;letter-spacing:2px}
+.name-input:focus{border-color:#fde74c}
+.name-input::placeholder{color:rgba(126,200,126,.35)}
+.music-row{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
+.music-btn{padding:7px 13px;background:rgba(76,175,80,.06);border:1.5px solid rgba(76,175,80,.2);border-radius:8px;color:#7ec87e;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;transition:all .18s;letter-spacing:1px}
+.music-btn:hover{border-color:#7ec87e;color:#fff}
+.music-btn.sel{background:rgba(76,175,80,.22);border-color:#4caf50;color:#b9f6ca}
+.title-row{display:flex;gap:12px;width:100%}
+.tee-btn{flex:1;padding:12px 0;background:#4caf50;color:#1a3318;border:none;border-radius:50px;font-family:'Playfair Display',serif;font-size:18px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:all .2s;box-shadow:0 4px 20px rgba(76,175,80,.35)}
+.tee-btn:hover{background:#fde74c;transform:translateY(-2px)}
+.lb-open-btn{padding:12px 20px;background:transparent;color:#7ec87e;border:1.5px solid rgba(76,175,80,.3);border-radius:50px;font-family:'Playfair Display',serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
+.lb-open-btn:hover{border-color:#7ec87e;color:#fde74c}
+/* TRANSITION */
+#transitionScreen{gap:5px;animation:fadeUp .4s ease;background:rgba(0,0,0,.75);border:1px solid rgba(76,175,80,.2);border-radius:24px;padding:38px 58px;text-align:center}
+.trans-label{font-size:11px;letter-spacing:6px;color:#7ec87e;text-transform:uppercase}
+.trans-num{font-family:'Playfair Display',serif;font-size:105px;font-weight:900;line-height:1;color:#4caf50;text-shadow:0 0 55px rgba(76,175,80,.5)}
+.trans-name{font-family:'Playfair Display',serif;font-size:25px;color:#fde74c}
+.trans-par{font-size:13px;letter-spacing:5px;color:#7ec87e;text-transform:uppercase}
+.trans-score{margin-top:6px;font-size:12px;color:rgba(126,200,126,.6)}
+.trans-hint{margin-top:14px;font-size:11px;color:rgba(126,200,126,.5);letter-spacing:2px;animation:pulse 1.5s infinite}
+/* QUESTION */
+#questionScreen{gap:0;background:rgba(8,22,8,.98);width:680px;border:2px solid #4caf50;border-radius:20px;overflow:hidden;animation:pop .3s cubic-bezier(.34,1.56,.64,1)}
+.q-header{background:#2a5a25;padding:11px 20px;display:flex;justify-content:space-between;align-items:center}
+.q-player-badge{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#fde74c}
+.q-type-badge{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(126,200,126,.6);background:rgba(0,0,0,.3);padding:3px 10px;border-radius:20px}
+.q-body{padding:24px 28px;display:flex;flex-direction:column;gap:16px}
+.q-text{font-family:'Playfair Display',serif;font-size:16px;color:#f5f0e8;line-height:1.55}
+.q-options{display:flex;flex-direction:column;gap:8px}
+.q-option{padding:11px 15px;background:rgba(76,175,80,.06);border:1.5px solid rgba(76,175,80,.22);border-radius:10px;color:#f5f0e8;font-size:12.5px;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:11px;text-align:left}
+.q-option:hover{background:rgba(76,175,80,.14);border-color:#7ec87e}
+.q-option.correct{background:rgba(76,175,80,.28)!important;border-color:#4caf50!important;color:#b9f6ca!important}
+.q-option.wrong{background:rgba(244,67,54,.18)!important;border-color:#f44336!important;color:#ffcdd2!important}
+.q-opt-letter{width:23px;height:23px;border-radius:50%;background:rgba(76,175,80,.15);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#7ec87e;flex-shrink:0}
+.fitb-row{display:flex;gap:10px;align-items:center}
+.fitb-input{flex:1;padding:11px 15px;background:rgba(76,175,80,.08);border:1.5px solid rgba(76,175,80,.35);border-radius:10px;color:#fde74c;font-family:'DM Mono',monospace;font-size:15px;outline:none;transition:border-color .2s;letter-spacing:2px}
+.fitb-input:focus{border-color:#fde74c}
+.fitb-input.correct{border-color:#4caf50!important;background:rgba(76,175,80,.18)!important}
+.fitb-input.wrong{border-color:#f44336!important;animation:shake .4s}
+.submit-btn{padding:11px 20px;background:#4caf50;color:#1a3318;border:none;border-radius:10px;font-family:'Playfair Display',serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap}
+.submit-btn:hover{background:#fde74c}
+.submit-btn:disabled{opacity:.4;cursor:default}
+.q-feedback{padding:11px 14px;border-radius:10px;font-size:12px;display:none;line-height:1.5}
+.q-feedback.show-c{display:block;background:rgba(76,175,80,.18);border:1.5px solid #4caf50;color:#b9f6ca}
+.q-feedback.show-w{display:block;background:rgba(244,67,54,.12);border:1.5px solid #f44336;color:#ffcdd2}
+.q-continue-btn{align-self:center;padding:11px 36px;background:#4caf50;color:#1a3318;border:none;border-radius:50px;font-family:'Playfair Display',serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;display:none}
+.q-continue-btn:hover{background:#fde74c;transform:translateY(-2px)}
+/* GAME */
+.game-hud{width:740px;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.78);padding:7px 14px;border-bottom:2px solid #2a5a25}
+.hud-name{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:#fde74c}
+.hud-par{font-size:10px;color:#7ec87e;letter-spacing:2px;text-transform:uppercase}
+.hud-stats{font-size:11px;color:#f5f0e8;text-align:center}
+.hud-diff{font-size:13px;font-family:'Playfair Display',serif;font-weight:700;text-align:center}
+.hud-diff.under{color:#4caf50}.hud-diff.over{color:#ef5350}.hud-diff.even{color:#7ec87e}
+.hud-hole-label{font-size:10px;color:#7ec87e;letter-spacing:3px;text-align:right}
+.hud-hole-num{font-family:'Playfair Display',serif;font-size:20px;color:#fde74c;text-align:right;line-height:1}
+.hud-mute{background:transparent;border:1px solid rgba(76,175,80,.3);border-radius:6px;color:#7ec87e;font-size:14px;padding:2px 8px;cursor:pointer;transition:all .18s;margin-right:6px}
+.hud-mute:hover{border-color:#7ec87e}
+.canvas-container{position:relative}
+#gameCanvas{display:block;cursor:crosshair}
+.notif-popup{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:rgba(5,18,5,.97);border:2.5px solid #fde74c;border-radius:18px;padding:18px 44px;text-align:center;pointer-events:none;z-index:20;transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
+.notif-popup.show{transform:translate(-50%,-50%) scale(1)}
+.notif-main{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:#fde74c}
+.notif-sub{font-size:12px;color:#7ec87e;letter-spacing:3px;margin-top:4px;text-transform:uppercase}
+.game-footer{width:740px;background:rgba(0,0,0,.78);border-top:2px solid #2a5a25;padding:6px 14px;display:flex;align-items:center;gap:12px}
+.power-label{font-size:10px;color:#7ec87e;letter-spacing:3px;text-transform:uppercase;white-space:nowrap}
+.power-track{flex:1;height:7px;background:rgba(76,175,80,.12);border-radius:4px;overflow:hidden}
+.power-fill{height:100%;width:0%;border-radius:4px;background:linear-gradient(90deg,#4caf50 0%,#fde74c 65%,#f44336 100%)}
+.status-text{font-size:11px;color:rgba(126,200,126,.6);letter-spacing:1px;white-space:nowrap;min-width:170px;text-align:right}
+/* FINAL / LB */
+#finalScreen,#leaderboardScreen{gap:16px;animation:fadeUp .5s ease;background:rgba(0,0,0,.82);border:1px solid rgba(76,175,80,.2);border-radius:24px;padding:26px 32px}
+.final-title{font-family:'Playfair Display',serif;font-size:34px;font-weight:900;color:#fde74c;text-align:center}
+.scorecard{border-collapse:collapse;font-size:11px}
+.scorecard th{background:#2a5a25;color:#fde74c;padding:7px 11px;font-family:'Playfair Display',serif;font-weight:700}
+.scorecard td{padding:5px 10px;text-align:center;color:#f5f0e8;border-bottom:1px solid rgba(255,255,255,.05)}
+.score-ace{color:#ffd700!important;font-weight:700}.score-eagle{color:#fde74c!important;font-weight:700}
+.score-birdie{color:#4caf50!important}.score-bogey{color:#ef5350!important}.score-dbl{color:#e91e63!important}
+.submit-score-area{display:flex;flex-direction:column;gap:10px;align-items:center;width:100%}
+.lb-input{width:250px;padding:11px 16px;text-align:center;background:rgba(76,175,80,.08);border:1.5px solid rgba(76,175,80,.35);border-radius:10px;color:#fde74c;font-family:'DM Mono',monospace;font-size:14px;outline:none;letter-spacing:2px;transition:border-color .2s}
+.lb-input:focus{border-color:#fde74c}
+.lb-input::placeholder{color:rgba(126,200,126,.35)}
+.row-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.btn-gold{padding:10px 28px;background:#fde74c;color:#1a3318;border:none;border-radius:50px;font-family:'Playfair Display',serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-gold:hover{background:#fff;transform:translateY(-2px)}
+.btn-green{padding:10px 28px;background:#4caf50;color:#1a3318;border:none;border-radius:50px;font-family:'Playfair Display',serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-green:hover{background:#fde74c;transform:translateY(-2px)}
+.btn-outline{padding:9px 24px;background:transparent;color:#7ec87e;border:1.5px solid rgba(76,175,80,.3);border-radius:50px;font-family:'Playfair Display',serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-outline:hover{border-color:#7ec87e;color:#fde74c}
+.lb-table{border-collapse:collapse;width:100%;min-width:440px;font-size:13px}
+.lb-table th{background:#2a5a25;color:#fde74c;padding:9px 15px;font-family:'Playfair Display',serif;font-weight:700}
+.lb-table td{padding:9px 15px;color:#f5f0e8;border-bottom:1px solid rgba(255,255,255,.05)}
+.lb-table tr:first-child td{color:#fde74c;font-weight:700}
+.lb-table tr:nth-child(2) td{color:#e0e0e0}
+.lb-table tr:nth-child(3) td{color:#cd7f32}
+.lb-status{font-size:11px;color:rgba(126,200,126,.6);letter-spacing:2px;text-align:center}
+.sc-scroll{max-height:280px;overflow-y:auto}
+.sc-scroll::-webkit-scrollbar{width:4px}
+.sc-scroll::-webkit-scrollbar-thumb{background:#2a5a25;border-radius:4px}
+</style>
+</head>
+<body>
+
+<video id="crowdVideo" src="crowd.mp4" loop muted playsinline preload="auto"
+  style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px"></video>
+<audio id="bgMusic" loop></audio>
+
+<!-- Score reaction overlay (video src set from blob at runtime) -->
+<div id="reactionOverlay" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.88);align-items:center;justify-content:center;flex-direction:column;gap:16px">
+  <video id="reactionActive" playsinline muted style="max-width:680px;max-height:450px;border-radius:16px;box-shadow:0 0 60px rgba(253,231,76,.4)"></video>
+  <div id="reactionLabel" style="font-family:'Playfair Display',serif;font-size:36px;font-weight:900;color:#fde74c;text-shadow:3px 3px 0 #a8960a;letter-spacing:2px"></div>
+</div>
+
+<!-- TITLE -->
+<div id="titleScreen" class="screen active">
+  <div class="flag-deco">⛳</div>
+  <div class="bigTitle">Mini Golf Masters</div>
+  <div class="tagline">18 Holes · Ancient China Edition</div>
+  <div class="sub-tag">Answer questions · Earn bonuses · Beat the course</div>
+  <div class="section-label">Your Name</div>
+  <input class="name-input" id="playerName" placeholder="Enter your name" maxlength="16">
+  <div class="section-label">Background Music</div>
+  <div class="music-row">
+    <button class="music-btn sel" onclick="selectMusic(this,'')">🔇 Off</button>
+    <button class="music-btn" onclick="selectMusic(this,'Song_1.mp3')">🎵 Song 1</button>
+    <button class="music-btn" onclick="selectMusic(this,'Song_2.mp3')">🎵 Song 2</button>
+    <button class="music-btn" onclick="selectMusic(this,'Song_3.mp3')">🎵 Song 3</button>
+    <button class="music-btn" onclick="selectMusic(this,'Song_4.mp3')">🎵 Song 4</button>
+  </div>
+  <div class="title-row">
+    <button class="tee-btn" onclick="startGame()">TEE OFF ⛳</button>
+    <button class="lb-open-btn" onclick="openLeaderboard()">🏆 Board</button>
+  </div>
+</div>
+
+<!-- TRANSITION -->
+<div id="transitionScreen" class="screen">
+  <div class="trans-label">Hole</div>
+  <div class="trans-num"   id="transNum">1</div>
+  <div class="trans-name"  id="transName">The Drive</div>
+  <div class="trans-par"   id="transPar">Par 2</div>
+  <div class="trans-score" id="transScore"></div>
+  <div class="trans-hint">Click anywhere to continue</div>
+</div>
+
+<!-- QUESTION -->
+<div id="questionScreen" class="screen">
+  <div class="q-header">
+    <span class="q-player-badge" id="qBadge">⛳ Answer to Tee Off</span>
+    <span class="q-type-badge"   id="qType">Multiple Choice</span>
+  </div>
+  <div class="q-body" id="qBody">
+    <div class="q-text" id="qText"></div>
+    <div class="q-feedback" id="qFeedback"></div>
+    <button class="q-continue-btn" id="qContinue" onclick="questionDone()">Continue to Tee ⛳</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="gameScreen" class="screen">
+  <div class="game-hud">
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div class="hud-name" id="hudName">Hole 1</div>
+      <div class="hud-par"  id="hudPar">Par 2 · Front 9</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+      <div class="hud-stats" id="hudStats">Stroke 0</div>
+      <div class="hud-diff even" id="hudDiff">E</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="hud-mute" id="muteBtn" onclick="toggleMute()">🔊</button>
+      <button class="hud-mute" title="Reset ball to start" onclick="resetBall()" style="font-size:13px">↺</button>
+      <div style="text-align:right">
+        <div class="hud-hole-label">HOLE</div>
+        <div class="hud-hole-num" id="hudHoleNum">1/18</div>
+      </div>
+    </div>
+  </div>
+  <div class="canvas-container">
+    <canvas id="gameCanvas" width="740" height="460"></canvas>
+    <div class="notif-popup" id="notifPopup">
+      <div class="notif-main" id="notifMain">HOLE IN ONE!</div>
+      <div class="notif-sub"  id="notifSub">Ace!</div>
+    </div>
+  </div>
+  <div class="game-footer">
+    <span class="power-label">Power</span>
+    <div class="power-track"><div class="power-fill" id="powerFill"></div></div>
+    <div class="status-text" id="statusText">Drag to aim &amp; shoot</div>
+  </div>
+</div>
+
+<!-- FINAL -->
+<div id="finalScreen" class="screen">
+  <div class="final-title">🏆 Round Complete!</div>
+  <div class="sc-scroll"><table class="scorecard" id="finalTable"></table></div>
+  <div class="submit-score-area">
+    <div class="section-label" style="color:rgba(126,200,126,.7)">Submit score to leaderboard</div>
+    <input class="lb-input" id="submitName" placeholder="Your name">
+    <div class="row-btns">
+      <button class="btn-gold"    onclick="submitToLeaderboard()">Submit 🏆</button>
+      <button class="btn-outline" onclick="openLeaderboard()">View Board</button>
+      <button class="btn-outline" onclick="restartGame()">Play Again</button>
+    </div>
+    <div class="lb-status" id="submitStatus"></div>
+  </div>
+</div>
+
+<!-- LEADERBOARD -->
+<div id="leaderboardScreen" class="screen">
+  <div class="final-title">🏆 Leaderboard</div>
+  <div class="sc-scroll">
+    <table class="lb-table">
+      <thead><tr><th>Rank</th><th>Name</th><th>Score</th><th>vs Par</th><th>★ Correct</th></tr></thead>
+      <tbody id="lbBody"><tr><td colspan="5" style="color:rgba(126,200,126,.5);padding:18px">Loading…</td></tr></tbody>
+    </table>
+  </div>
+  <div class="row-btns">
+    <button class="btn-green"   onclick="loadLeaderboardUI()">🔄 Refresh</button>
+    <button class="btn-outline" onclick="goBack()">← Back</button>
+  </div>
+</div>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+  const cfg={
+    apiKey:"AIzaSyC3ie3lyR5wXHePSci7LsGgOQqud937wAY",
+    authDomain:"city-states-5adaf.firebaseapp.com",
+    databaseURL:"https://city-states-5adaf-default-rtdb.firebaseio.com",
+    projectId:"city-states-5adaf",
+    storageBucket:"city-states-5adaf.firebasestorage.app",
+    messagingSenderId:"83957079489",
+    appId:"1:83957079489:web:6e3d6a416320caa86b2340"
+  };
+  try{
+    firebase.initializeApp(cfg);
+    const db=firebase.firestore();
+    window._fbSubmit=async(name,score,correctCt,vsPar)=>{
+      try{await db.collection('minigolf_scores').add({name,score,correctCt,vsPar,date:firebase.firestore.FieldValue.serverTimestamp()});return true;}
+      catch(e){console.error('FB write:',e);return false;}
+    };
+    window._fbLoad=async()=>{
+      try{const s=await db.collection('minigolf_scores').orderBy('score','asc').limit(15).get();return s.docs.map(d=>({id:d.id,...d.data()}));}
+      catch(e){console.error('FB read:',e);return[];}
+    };
+    console.log('⛳ Firebase ready — city-states-5adaf');
+  }catch(e){console.error('Firebase init:',e);window._fbSubmit=async()=>false;window._fbLoad=async()=>[];}
+})();
+</script>
+
+<script>
+// ════════════════════ QUESTIONS ════════════════════════════════════
+const QUESTIONS=[
+{type:'mc',q:'According to ancient Chinese belief, burning fake "spirit money" was done to:',opts:['Honor heaven spirits during harvest festivals','Give ancestors income in the afterlife','Keep evil spirits from entering homes','Mark the beginning of the new year'],ans:1,explain:'Families burned fake "spirit money" to give their ancestors income in the afterlife — one of many ancestor veneration rituals.'},
+{type:'mc',q:'Confucius believed China\'s disorder was caused by:',opts:['Invasion by northern nomads weakening the Zhou','Abandoning the traditional roles and values of early Zhou','Corrupt foreign advisors influencing the royal court','Peasants refusing to pay taxes to the emperor'],ans:1,explain:'Confucius believed the cause of disorder was that the Chinese had turned away from the traditional roles and values of the early Zhou dynasty.'},
+{type:'mc',q:'When people are governed by laws rather than virtue, Confucius taught they will:',opts:['Develop deep respect for their emperor over time','Avoid punishment but feel no sense of shame','Naturally choose moral principles on their own','Become increasingly rebellious and dangerous'],ans:1,explain:'"If led by laws…they will try to avoid the punishment but have no sense of shame." — Confucius, Analects'},
+{type:'mc',q:'In the Five Confucian Relationships, which is the ONLY relationship between equals?',opts:['Ruler and subject','Husband and wife','Father and son','Two friends'],ans:3,explain:'All Confucian relationships except "two friends" are between people of different status or age, making friendship the only equal relationship.'},
+{type:'mc',q:'The Dao De Jing uses water as a metaphor to show that:',opts:['Rulers must be feared like floods to maintain order','Yin is always ultimately stronger than yang','Patient, soft forces can overcome hard, strong things','Nature is too chaotic for humans to understand'],ans:2,explain:'"There is nothing more soft and weak than water, and yet for attacking things firm and strong, nothing is better than it." — Laozi'},
+{type:'mc',q:'How did Shi Huangdi prevent powerful noble families from rebelling?',opts:['He publicly executed any noble who challenged him','He stripped all nobles of land and titles','He forced noble families to move to the capital where spies watched them','He required all nobles to serve five years in his army'],ans:2,explain:'"To prevent rebellion, Shi Huangdi forced thousands of noble families to move to the capital. There, government spies could watch over them."'},
+{type:'mc',q:'The core disagreement between Han Feizi and Confucius about governing was:',opts:['Whether China needed a standardized written language','Whether rulers should build walls or rely on armies','Whether people can be led by example or must be forced by strict laws','Whether the emperor should control land or only collect taxes'],ans:2,explain:'Confucius believed people could be led by good example. Han Feizi believed people must be forced to be good through strict laws — the essence of Legalism.'},
+{type:'mc',q:'Chen Sheng sparked the rebellion that ended the Qin dynasty because:',opts:['He opposed Shi Huangdi\'s book-burning policies','He was unfairly passed over for military promotion','He feared punishment for arriving late due to heavy rains','He disagreed with the forced labor on the Great Wall'],ans:2,explain:'Heavy rains delayed Chen Sheng\'s band. Knowing the penalty for arriving late would be severe, he decided he had nothing to lose by rebelling.'},
+{type:'mc',q:'Why did Shi Huangdi standardize axle widths of all carts in China?',opts:['To collect more taxes from cart manufacturers','To make Chinese carts stronger and more durable','So all road ruts would match, making travel easier','To prevent rival kingdoms from using Chinese roads'],ans:2,explain:'Standardizing axle lengths meant all ruts in roads were the same width, making travel between different areas of the empire much easier.'},
+{type:'mc',q:'Which belief specifically set Daoism apart from Confucianism?',opts:['Daoists emphasized ancestor veneration above all else','Daoists believed in the possibility of life after death or immortality','Daoists valued ritual and ceremony as essential to harmony','Daoists believed rulers needed strict laws to govern'],ans:1,explain:'Unlike Confucians, the text states "Daoists believed in the possibility of life after death or even immortality."'},
+{type:'mc',q:'Why did Han Feizi argue that even small crimes should be punished severely?',opts:['To demonstrate the emperor\'s absolute power','Because small crimes hurt ordinary people more','If people stop committing small crimes, large crimes will not arise','So criminals feel shame and reform themselves'],ans:2,explain:'"If small offenses do not arise, big crimes will not come. And thus people will commit no crimes and disorder will not arise." — Han Feizi'},
+{type:'mc',q:'According to ancient Chinese belief, harmful spirits could:',opts:['Prevent crops from growing and cause famines','Cause floods along the major rivers','Harm travelers at night or hide in a house, bringing bad luck','Compete with good spirits for control of the heavens'],ans:2,explain:'"Harmful spirits might harm travelers at night or hide in a house, bringing bad luck." Loud sounds during festivals were used to frighten them away.'},
+{type:'mc',q:'"Filial piety" in Confucianism refers to:',opts:['Loyalty between two close friends of equal standing','A ruler\'s duty to educate and protect subjects','The devotion and respect children show toward parents','A ritual performed at ancestor shrines during holidays'],ans:2,explain:'Filial piety is "the devotion of children to their parents," called "the source of all virtues" in Confucianism.'},
+{type:'mc',q:'Shi Huangdi tore down walls between former kingdoms primarily to:',opts:['Gather building materials for new roads and palaces','Make rebellion harder — local leaders couldn\'t defend territory','Demonstrate that the old kingdoms were permanently defeated','Allow trade to flow freely across all regions'],ans:1,explain:'"Without these walls, local leaders could not defend their territory and break away from Qin rule."'},
+{type:'mc',q:'According to Daoist belief, order in society comes from:',opts:['Creating and strictly enforcing a comprehensive legal code','Learning and performing the traditional rituals of ancestors','Keeping to a simple life rather than competing for wealth and power','Honoring the five key relationships between people'],ans:2,explain:'"Order comes when people keep to a simple life, instead of competing for wealth and power." Good Daoist leaders took little action.'},
+{type:'mc',q:'The Qin kingdom was located in:',opts:['The eastern coast near the Yellow Sea','The fertile plains along the Yangtze River delta','Mountainous northwestern China, beyond which lay Central Asia','The southern lowlands near the Pearl River'],ans:2,explain:'"Qin was a mountainous kingdom located in northwestern China. Beyond Qin lay the foreign lands of Central Asia."'},
+// FILL IN THE BLANK
+{type:'fitb',q:'The collection of Confucius\'s teachings written down by his students is called the ______.',ans:'analects',display:'Analects',explain:'The Analects became central to political and ethical thought across China and East Asia. Chinese students still memorize passages from it today.'},
+{type:'fitb',q:'The political philosophy holding that a strong leader and strict legal system are needed for social order is called ______.', ans:'legalism',display:'Legalism',explain:'Legalism was the philosophy of advisors like Shang Yang and Han Feizi that shaped the harsh but effective governance of the Qin dynasty.'},
+{type:'fitb',q:'Shi Huangdi organized his empire into 36 ______, each divided into counties.',ans:'provinces',display:'provinces',explain:'"He organized China into 36 provinces. Each province was divided into counties" that reported up to the central government.'},
+{type:'fitb',q:'The devotion and respect children owe to their parents is called filial ______.',ans:'piety',display:'piety',explain:'Filial piety — the devotion of children to parents — is "the source of all virtues" in Confucianism and modeled all other relationships.'},
+{type:'fitb',q:'The Daoist text attributed to Laozi, composed mostly of poems, is called the Dao De ______.',ans:'jing',display:'Jing',explain:'The Dao De Jing is Daoism\'s foundational text. Historians believe it was written by many people over time, not Laozi alone.'},
+{type:'fitb',q:'When Shi Huangdi banned dangerous ideas and ordered books burned, this was called ______.',ans:'censorship',display:'censorship',explain:'Shi Huangdi censored ideas he found dangerous. He ordered books burned, banned criticism of government, and prohibited praising past rulers.'},
+{type:'fitb',q:'The two opposing forces in Daoist philosophy — one female/dark, one male/bright — are yin and ______.',ans:'yang',display:'yang',explain:'Daoists believed yin and yang were two great opposing forces in nature, and that balance between them was key to harmony in the universe.'},
+{type:'fitb',q:'Ancient Chinese families maintained shrines with ______ inscribed with ancestors\' names.',ans:'tablets',display:'tablets',explain:'"Families had shrines with tablets inscribed with ancestors\' names" and set out food on special occasions to welcome them home.'},
+{type:'fitb',q:'King Zheng of Qin declared himself "______ Huangdi," meaning First Emperor.',ans:'shi',display:'Shi',explain:'King Zheng declared himself Shi Huangdi — "First Emperor." The word "Huangdi" was tied to the gods and rulers of China\'s past.'},
+{type:'fitb',q:'The philosophy of following the natural way of the universe, emphasizing a simple life, is called ______.',ans:'daoism',display:'Daoism',explain:'Daoism is "an ancient Chinese way of life that emphasizes a simple and natural existence" — following the Dao, the natural way of the universe.'}
+];
+
+// ════════════════════ HOLES ════════════════════════════════════════
+const HOLES=[
+// H1: The Drive — straight with two sand traps. Par 3. Shortcut: blast it hard up the middle, miss both traps = par 2 chance.
+{name:'The Drive',par:3,bg:'#2d6e27',start:[80,230],cup:[665,230],
+ boundary:[[35,178],[705,178],[705,282],[35,282]],
+ obstacles:[{type:'sand',x:245,y:213,rx:52,ry:22},{type:'sand',x:510,y:248,rx:52,ry:22}]},
+
+// H2: Dog Leg — L-shape with pond at corner and sand in back leg. Par 4. Shortcut: cut the corner over the rough (no wall there) for a straight shot.
+{name:'Dog Leg',par:4,bg:'#2a6525',start:[80,210],cup:[380,385],
+ boundary:[[35,155],[415,155],[415,55],[535,55],[535,425],[280,425],[280,265],[35,265]],
+ obstacles:[{type:'water',x:175,y:207,rx:38,ry:28},{type:'sand',x:390,y:360,rx:42,ry:26}]},
+
+// H3: The Gate — narrow wall gaps, sand before, water after. Par 3. Shortcut: thread both gaps in one shot.
+{name:'The Gate',par:3,bg:'#2d6e27',start:[80,230],cup:[660,230],
+ boundary:[[35,172],[705,172],[705,288],[35,288]],
+ obstacles:[{type:'wall',x1:360,y1:172,x2:360,y2:212},{type:'wall',x1:360,y1:248,x2:360,y2:288},
+            {type:'sand',x:205,y:230,rx:45,ry:28},{type:'water',x:525,y:230,rx:45,ry:28}]},
+
+// H4: S-Curve — two-leg Z shape, sand+water. Par 4. Shortcut: hug the inner corner tightly for a cleaner angle.
+{name:'S-Curve',par:4,bg:'#2a6525',start:[80,140],cup:[660,320],
+ boundary:[[35,80],[380,80],[380,255],[705,255],[705,370],[355,370],[355,195],[35,195]],
+ obstacles:[{type:'sand',x:195,y:138,rx:42,ry:28},{type:'water',x:545,y:315,rx:42,ry:28}]},
+
+// H5: The Windmill — water before, sand after spinning blades. Par 4. Shortcut: time the blade and go straight through center.
+{name:'The Windmill',par:4,bg:'#2d6e27',start:[80,230],cup:[660,230],
+ boundary:[[35,163],[705,163],[705,297],[35,297]],
+ obstacles:[{type:'windmill',x:370,y:230,bladeLen:63,speed:0.024},
+            {type:'water',x:175,y:230,rx:44,ry:32},{type:'sand',x:560,y:230,rx:44,ry:32}]},
+
+// H6: The Horseshoe — Γ-shape with bumper, water, sand. Par 4. Shortcut: bank off the top wall to reach the cup without going around the bend.
+{name:'The Horseshoe',par:4,bg:'#2a6525',start:[620,135],cup:[120,355],
+ boundary:[[35,70],[705,70],[705,200],[190,200],[190,415],[35,415]],
+ obstacles:[{type:'circle',x:420,y:135,r:30},
+            {type:'water',x:260,y:132,rx:46,ry:30},{type:'sand',x:112,y:305,rx:36,ry:36}]},
+
+// H7: Bumper Alley — 3 bumpers, 2 sand traps. Par 4. Shortcut: aim low-left to bank under all three bumpers in one shot.
+{name:'Bumper Alley',par:4,bg:'#2d6e27',start:[80,230],cup:[660,230],
+ boundary:[[35,153],[705,153],[705,307],[35,307]],
+ obstacles:[{type:'circle',x:195,y:230,r:30},{type:'circle',x:370,y:230,r:30},{type:'circle',x:545,y:230,r:30},
+            {type:'sand',x:282,y:197,rx:32,ry:22},{type:'sand',x:458,y:263,rx:32,ry:22}]},
+
+// H8: The Maze — full rect, 3 internal walls, sand+water. Par 5. Shortcut: top corridor is longest but cleanest path.
+{name:'The Maze',par:5,bg:'#245c1f',start:[80,85],cup:[660,385],
+ boundary:[[35,35],[705,35],[705,425],[35,425]],
+ obstacles:[{type:'wall',x1:35,y1:145,x2:545,y2:145},{type:'wall',x1:160,y1:255,x2:705,y2:255},{type:'wall',x1:35,y1:365,x2:545,y2:365},
+            {type:'sand',x:610,y:89,rx:45,ry:34},{type:'water',x:90,y:310,rx:38,ry:34}]},
+
+// H9: Championship — 2 windmills + bumper + water. Par 5. Shortcut: bank off the bottom wall between the two windmills.
+{name:'Championship',par:5,bg:'#245c1f',start:[80,230],cup:[660,230],
+ boundary:[[35,155],[705,155],[705,305],[35,305]],
+ obstacles:[{type:'windmill',x:210,y:230,bladeLen:58,speed:0.032},{type:'circle',x:370,y:230,r:26},{type:'windmill',x:530,y:230,bladeLen:58,speed:-0.041},
+            {type:'water',x:440,y:230,rx:36,ry:30}]},
+
+// H10: The Switchback — Z-shape, sand+water. Par 4. Shortcut: overshoot the first turn to reach inner wall and redirect ball diagonally.
+{name:'The Switchback',par:4,bg:'#2a6525',start:[80,100],cup:[655,360],
+ boundary:[[35,50],[440,50],[440,195],[705,195],[705,410],[300,410],[300,265],[35,265]],
+ obstacles:[{type:'sand',x:245,y:120,rx:42,ry:30},{type:'water',x:510,y:300,rx:42,ry:32}]},
+
+// H11: Twin Gates — 2 gaps, pond center. Par 3. Shortcut: thread both gaps in one hard shot.
+{name:'Twin Gates',par:3,bg:'#2d6e27',start:[80,230],cup:[660,230],
+ boundary:[[35,172],[705,172],[705,288],[35,288]],
+ obstacles:[{type:'wall',x1:245,y1:172,x2:245,y2:212},{type:'wall',x1:245,y1:248,x2:245,y2:288},
+            {type:'wall',x1:495,y1:172,x2:495,y2:212},{type:'wall',x1:495,y1:248,x2:495,y2:288},
+            {type:'water',x:370,y:230,rx:42,ry:25}]},
+
+// H12: Pinball — 4 bumpers diamond, sand center, water left. Par 4. Shortcut: hard bottom-rail bounce bypasses the center cluster.
+{name:'Pinball',par:4,bg:'#2d6e27',start:[80,230],cup:[660,230],
+ boundary:[[35,120],[705,120],[705,340],[35,340]],
+ obstacles:[{type:'circle',x:220,y:178,r:26},{type:'circle',x:370,y:282,r:26},{type:'circle',x:520,y:178,r:26},{type:'circle',x:220,y:282,r:26},
+            {type:'sand',x:370,y:230,rx:38,ry:28},{type:'water',x:143,y:230,rx:34,ry:26}]},
+
+// H13: The Boomerang — reverse-L, water+sand. Par 4. Shortcut: bank off the outer corner wall to cut the turn early.
+{name:'The Boomerang',par:4,bg:'#2a6525',start:[80,350],cup:[650,100],
+ boundary:[[35,290],[400,290],[400,50],[705,50],[705,165],[510,165],[510,415],[35,415]],
+ obstacles:[{type:'water',x:220,y:355,rx:40,ry:28},{type:'sand',x:595,y:108,rx:40,ry:28}]},
+
+// H14: Spin City — 2 windmills opposite spin, sand between, water at end. Par 5. Shortcut: ride the gap along the top wall, bypassing the sand.
+{name:'Spin City',par:5,bg:'#245c1f',start:[80,230],cup:[660,230],
+ boundary:[[35,150],[705,150],[705,310],[35,310]],
+ obstacles:[{type:'windmill',x:250,y:230,bladeLen:58,speed:0.028},{type:'windmill',x:490,y:230,bladeLen:58,speed:-0.036},
+            {type:'sand',x:370,y:230,rx:42,ry:32},{type:'water',x:615,y:230,rx:38,ry:30}]},
+
+// H15: Tight Rope — ultra narrow (64px). Par 3. No shortcuts, just don't miss.
+{name:'Tight Rope',par:3,bg:'#2d6e27',start:[80,230],cup:[660,230],
+ boundary:[[35,198],[705,198],[705,262],[35,262]],obstacles:[]},
+
+// H16: The Island — big circle obstacle, water flanking both sides. Par 4. Shortcut: squeeze between the circle and the top water trap.
+{name:'The Island',par:4,bg:'#2a6525',start:[80,230],cup:[660,230],
+ boundary:[[35,100],[705,100],[705,360],[35,360]],
+ obstacles:[{type:'circle',x:370,y:230,r:65},
+            {type:'water',x:195,y:168,rx:48,ry:36},{type:'water',x:545,y:292,rx:48,ry:36}]},
+
+// H17: The Gauntlet — walls+circles slalom, sand+water. Par 5. Shortcut: top-rail bank clears the first wall and drops near the second gap.
+{name:'The Gauntlet',par:5,bg:'#245c1f',start:[80,230],cup:[660,230],
+ boundary:[[35,155],[705,155],[705,305],[35,305]],
+ obstacles:[{type:'wall',x1:180,y1:155,x2:180,y2:248},{type:'circle',x:290,y:282,r:22},
+            {type:'wall',x1:380,y1:212,x2:380,y2:305},{type:'circle',x:490,y:178,r:22},{type:'wall',x1:580,y1:155,x2:580,y2:248},
+            {type:'sand',x:232,y:230,rx:34,ry:26},{type:'water',x:434,y:230,rx:34,ry:26}]},
+
+// H18: The Dragon — 2 windmills + 2 circles + 2 water traps. Par 6. Shortcut: thread the gap between the two circles dead-center for a hero line.
+{name:'The Dragon',par:6,bg:'#1d4a19',start:[80,230],cup:[660,230],
+ boundary:[[35,130],[705,130],[705,330],[35,330]],
+ obstacles:[{type:'windmill',x:185,y:230,bladeLen:55,speed:0.045},{type:'circle',x:310,y:192,r:24},
+            {type:'circle',x:430,y:268,r:24},{type:'windmill',x:555,y:230,bladeLen:55,speed:-0.038},
+            {type:'water',x:252,y:183,rx:36,ry:26},{type:'water',x:488,y:278,rx:36,ry:26}]}
+]
+const TOTAL_HOLES=18, TOTAL_PAR=HOLES.reduce((a,h)=>a+h.par,0);
+
+// ════════════════════ AUDIO ════════════════════════════════════════
+let AC,musicMuted=false,selectedSong='';
+function ensureAC(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC;}
+function playTone(freq,type,dur,gain=0.3,delay=0){try{const ac=ensureAC(),o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type=type;o.frequency.setValueAtTime(freq,ac.currentTime+delay);g.gain.setValueAtTime(gain,ac.currentTime+delay);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+delay+dur);o.start(ac.currentTime+delay);o.stop(ac.currentTime+delay+dur);}catch(e){}}
+function playNoise(dur,gain=0.4){try{const ac=ensureAC(),buf=ac.createBuffer(1,Math.floor(ac.sampleRate*dur),ac.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);const s=ac.createBufferSource(),g=ac.createGain();s.buffer=buf;s.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(gain,ac.currentTime);s.start();}catch(e){}}
+const SFX={
+  swing:()=>{playNoise(0.09,0.5);playTone(160,'sine',0.08,0.25,0.04);},
+  bounce:()=>{playTone(190,'sine',0.1,0.22);playTone(130,'sine',0.07,0.14,0.06);},
+  sink:()=>{try{const ac=ensureAC(),o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.setValueAtTime(420,ac.currentTime);o.frequency.exponentialRampToValueAtTime(80,ac.currentTime+0.35);g.gain.setValueAtTime(0.45,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.45);o.start();o.stop(ac.currentTime+0.45);}catch(e){}},
+  ace:()=>{[523,659,784,1047].forEach((f,i)=>playTone(f,'square',0.35,0.25,i*0.13));},
+  eagle:()=>{[392,494,587,698,880].forEach((f,i)=>playTone(f,'triangle',0.3,0.28,i*0.1));},
+  birdie:()=>{playTone(523,'sine',0.18,0.32);playTone(659,'sine',0.22,0.32,0.14);playTone(784,'sine',0.28,0.32,0.28);},
+  bogey:()=>{playTone(320,'sawtooth',0.14,0.2);playTone(260,'sawtooth',0.18,0.18,0.14);playTone(210,'sawtooth',0.28,0.18,0.28);},
+  correct:()=>{playTone(523,'sine',0.15,0.35);playTone(784,'sine',0.2,0.35,0.12);},
+  wrong:()=>{playTone(220,'square',0.14,0.25);playTone(190,'square',0.18,0.2,0.12);}
+};
+function selectMusic(btn,src){
+  document.querySelectorAll('.music-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  selectedSong=src;
+  const el=document.getElementById('bgMusic');
+  if(!src){ el.pause(); el.src=''; return; }
+  // Play immediately — this click IS the user gesture browsers require
+  el.src=src;
+  el.volume=0.35;
+  el.muted=false;
+  el.loop=true;
+  el.play().catch(e=>console.warn('Music play blocked:',e));
+}
+function startMusic(){
+  // By the time TEE OFF is clicked the audio is already playing.
+  // Just unpause in case something stopped it; never reassign src.
+  const el=document.getElementById('bgMusic');
+  if(!selectedSong) return;
+  if(el.paused){ el.volume=0.35; el.play().catch(()=>{}); }
+}
+function toggleMute(){
+  musicMuted=!musicMuted;
+  const el=document.getElementById('bgMusic');
+  el.muted=musicMuted;
+  document.getElementById('muteBtn').textContent=musicMuted?'🔇':'🔊';
+}
+
+// Reaction video system — direct src, muted start so autoplay always works
+const RV_FILES={eagle:'eagle.mp4',birdie:'birdie.mp4',par:'par.mp4',bogey:'bogey.mp4'};
+
+function showReactionVideo(type,label,cb){
+  const file=RV_FILES[type];
+  const overlay=document.getElementById('reactionOverlay');
+  const vid=document.getElementById('reactionActive');
+  const lbl=document.getElementById('reactionLabel');
+  if(!file){cb();return;}
+  lbl.textContent=label;
+  overlay.style.display='flex';
+  let done=false;
+  const finish=()=>{
+    if(done)return;done=true;
+    overlay.style.display='none';
+    vid.pause();
+    vid.src='';
+    overlay.onclick=null;
+    cb();
+  };
+  vid.src=file;
+  vid.muted=true;
+  vid.load();
+  const t=setTimeout(finish,8000);
+  vid.oncanplay=()=>{
+    vid.oncanplay=null;
+    vid.play().then(()=>{vid.muted=false;}).catch(finish);
+  };
+  vid.onended=()=>{clearTimeout(t);finish();};
+  vid.onerror =()=>{clearTimeout(t);finish();};
+  overlay.onclick=()=>{clearTimeout(t);finish();};
+}
+
+// ════════════════════ STATE ════════════════════════════════════════
+const BALL_R=9,CUP_R=13,CUP_SPEED=4.8,FRICTION=0.983,BOUNCE=0.58,MAX_POWER=17,DRAG_SCALE=0.135,BLADE_W=7;
+let playerName='',holeIdx=0,scores=Array(TOTAL_HOLES).fill(0),bonuses=Array(TOTAL_HOLES).fill(0),correctCt=0,usedQIdxs=[],prevScreen='titleScreen';
+let ball={x:0,y:0,vx:0,vy:0,sinking:false,sinkT:0,r:BALL_R};
+let lastSafeX=80,lastSafeY=230,waterPenaltyFlash=0;
+let ballMoving=false,windmills=[],dragging=false,dragX=0,dragY=0,rafId=null,lastTS=0,currentHole=null,holeWalls=[];
+const canvas=document.getElementById('gameCanvas'),ctx=canvas.getContext('2d'),video=document.getElementById('crowdVideo');
+video.play().catch(()=>{});
+
+// ════════════════════ UTILS ════════════════════════════════════════
+function cps(px,py,ax,ay,bx,by){const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy;if(l<1e-9)return{x:ax,y:ay};const t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/l));return{x:ax+t*dx,y:ay+t*dy};}
+let lastBounce=0;
+function resSeg(b,x1,y1,x2,y2){const cp=cps(b.x,b.y,x1,y1,x2,y2),dx=b.x-cp.x,dy=b.y-cp.y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<b.r&&dist>0.001){const nx=dx/dist,ny=dy/dist;b.x=cp.x+nx*b.r*1.01;b.y=cp.y+ny*b.r*1.01;const dot=b.vx*nx+b.vy*ny;if(dot<0){b.vx-=2*dot*nx*BOUNCE;b.vy-=2*dot*ny*BOUNCE;const now=Date.now();if(now-lastBounce>80){SFX.bounce();lastBounce=now;}}}}
+function resCirc(b,cx,cy,cr){const dx=b.x-cx,dy=b.y-cy,dist=Math.sqrt(dx*dx+dy*dy),minD=b.r+cr;if(dist<minD&&dist>0.001){const nx=dx/dist,ny=dy/dist;b.x=cx+nx*(minD+1);b.y=cy+ny*(minD+1);const dot=b.vx*nx+b.vy*ny;if(dot<0){b.vx-=2*dot*nx*BOUNCE;b.vy-=2*dot*ny*BOUNCE;const now=Date.now();if(now-lastBounce>80){SFX.bounce();lastBounce=now;}}}}
+function polyWalls(pts){return pts.map((_,i)=>{const a=pts[i],b=pts[(i+1)%pts.length];return[a[0],a[1],b[0],b[1]];});}
+function inEllipse(px,py,ex,ey,erx,ery){const dx=(px-ex)/erx,dy=(py-ey)/ery;return dx*dx+dy*dy<=1;}
+function setScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function effScore(h){return Math.max(1,scores[h]+bonuses[h]);}
+function scoreLbl(s,par){const d=s-par;if(s===1)return{t:'ACE!',c:'score-ace'};if(d<=-2)return{t:'Eagle',c:'score-eagle'};if(d===-1)return{t:'Birdie',c:'score-birdie'};if(d===0)return{t:'Par',c:'score-par'};if(d===1)return{t:'Bogey',c:'score-bogey'};return{t:'+'+d,c:'score-dbl'};}
+
+// ════════════════════ FLOW ═════════════════════════════════════════
+function startGame(){ensureAC();playerName=(document.getElementById('playerName').value.trim())||'Player';scores=Array(TOTAL_HOLES).fill(0);bonuses=Array(TOTAL_HOLES).fill(0);correctCt=0;usedQIdxs=[];holeIdx=0;video.play().catch(()=>{});startMusic();showTransition();}
+function showTransition(){
+  const h=HOLES[holeIdx];
+  document.getElementById('transNum').textContent=holeIdx+1;
+  document.getElementById('transName').textContent=h.name;
+  document.getElementById('transPar').textContent='Par '+h.par;
+  if(holeIdx>0){const tot=scores.slice(0,holeIdx).reduce((_,__,i)=>_+effScore(i),0),par=HOLES.slice(0,holeIdx).reduce((a,hh)=>a+hh.par,0),diff=tot-par;document.getElementById('transScore').textContent='Total: '+tot+' ('+( diff===0?'Even':diff>0?'+'+diff+' over':Math.abs(diff)+' under')+' par)';}
+  else document.getElementById('transScore').textContent='';
+  setScreen('transitionScreen');
+  document.getElementById('transitionScreen').onclick=()=>{document.getElementById('transitionScreen').onclick=null;showQuestion();};
+}
+function pickQ(){let pool=QUESTIONS.map((_,i)=>i).filter(i=>!usedQIdxs.slice(-8).includes(i));if(!pool.length)pool=QUESTIONS.map((_,i)=>i);const idx=pool[Math.floor(Math.random()*pool.length)];usedQIdxs.push(idx);if(usedQIdxs.length>30)usedQIdxs.shift();return QUESTIONS[idx];}
+function showQuestion(){
+  const q=pickQ();
+  document.getElementById('qBadge').textContent='⛳ '+playerName+' — Hole '+(holeIdx+1)+' of '+TOTAL_HOLES;
+  document.getElementById('qType').textContent=q.type==='mc'?'Multiple Choice':'Fill in the Blank';
+  document.getElementById('qText').textContent=q.q;
+  const body=document.getElementById('qBody');
+  body.querySelectorAll('.q-options,.fitb-row').forEach(e=>e.remove());
+  const fb=document.getElementById('qFeedback'),cont=document.getElementById('qContinue');
+  fb.className='q-feedback';fb.innerHTML='';cont.style.display='none';
+  if(q.type==='mc'){
+    const wrap=document.createElement('div');wrap.className='q-options';
+    q.opts.forEach((opt,i)=>{
+      const btn=document.createElement('button');btn.className='q-option';
+      btn.innerHTML='<span class="q-opt-letter">'+'ABCD'[i]+'</span> '+opt;
+      btn.onclick=()=>{
+        if(fb.className!=='q-feedback')return;
+        const ok=(i===q.ans);
+        wrap.querySelectorAll('.q-option').forEach((b,j)=>{if(j===q.ans)b.classList.add('correct');else if(j===i&&!ok)b.classList.add('wrong');b.onclick=null;});
+        ok?(bonuses[holeIdx]=-1,correctCt++,SFX.correct(),fb.className='q-feedback show-c',fb.innerHTML='✅ <b>Correct!</b> '+q.explain+' <span style="color:#4caf50;margin-left:6px">−1 Stroke Bonus!</span>'):(bonuses[holeIdx]=1,SFX.wrong(),fb.className='q-feedback show-w',fb.innerHTML='❌ <b>Incorrect.</b> Answer: <b style="color:#fde74c">'+q.opts[q.ans]+'</b>. '+q.explain+' <span style="color:#f44336;margin-left:6px">+1 Stroke Penalty</span>');
+        cont.style.display='block';
+      };
+      wrap.appendChild(btn);
+    });
+    body.insertBefore(wrap,fb);
+  } else {
+    const row=document.createElement('div');row.className='fitb-row';
+    const inp=document.createElement('input');inp.className='fitb-input';inp.type='text';inp.placeholder='Type your answer…';inp.id='fitbInp';
+    const sub=document.createElement('button');sub.className='submit-btn';sub.textContent='Submit';
+    const submit=()=>{
+      if(fb.className!=='q-feedback'||!inp.value.trim())return;
+      const ok=inp.value.trim().toLowerCase()===q.ans.toLowerCase();
+      inp.classList.add(ok?'correct':'wrong');inp.disabled=true;sub.disabled=true;
+      ok?(bonuses[holeIdx]=-1,correctCt++,SFX.correct(),fb.className='q-feedback show-c',fb.innerHTML='✅ <b>Correct!</b> '+q.explain+' <span style="color:#4caf50;margin-left:6px">−1 Stroke Bonus!</span>'):(bonuses[holeIdx]=1,SFX.wrong(),fb.className='q-feedback show-w',fb.innerHTML='❌ <b>Incorrect.</b> Answer: <b style="color:#fde74c">'+q.display+'</b>. '+q.explain+' <span style="color:#f44336;margin-left:6px">+1 Stroke Penalty</span>');
+      cont.style.display='block';
+    };
+    inp.onkeydown=e=>{if(e.key==='Enter')submit();};sub.onclick=submit;
+    row.append(inp,sub);body.insertBefore(row,fb);setTimeout(()=>inp.focus(),80);
+  }
+  setScreen('questionScreen');
+}
+function questionDone(){initHole(holeIdx);updateHUD();setScreen('gameScreen');if(rafId)cancelAnimationFrame(rafId);lastTS=0;rafId=requestAnimationFrame(loop);}
+function initHole(idx){_holeFinished=false;clearTimeout(_autoFinishTimer);_autoFinishTimer=null;lastSafeX=HOLES[idx].start[0];lastSafeY=HOLES[idx].start[1];waterPenaltyFlash=0;dragging=false;_inputBlocked=true;setTimeout(()=>{_inputBlocked=false;},350);currentHole=HOLES[idx];holeWalls=polyWalls(currentHole.boundary);for(const o of currentHole.obstacles)if(o.type==='wall')holeWalls.push([o.x1,o.y1,o.x2,o.y2]);windmills=currentHole.obstacles.filter(o=>o.type==='windmill').map(o=>({...o,angle:0}));ball.x=currentHole.start[0];ball.y=currentHole.start[1];ball.vx=0;ball.vy=0;ball.r=BALL_R;ball.sinking=false;ball.sinkT=0;ballMoving=false;dragging=false;if(!scores[idx])scores[idx]=0;}
+function updateHUD(){const h=HOLES[holeIdx],nine=holeIdx<9?'Front 9':'Back 9';document.getElementById('hudName').textContent='Hole '+(holeIdx+1)+': '+h.name;document.getElementById('hudPar').textContent='Par '+h.par+' · '+nine;document.getElementById('hudHoleNum').textContent=(holeIdx+1)+'/18';let tot=0,par=0;for(let i=0;i<=holeIdx;i++){tot+=i<holeIdx?effScore(i):(scores[i]||0);par+=HOLES[i].par;}const d=tot-par,el=document.getElementById('hudDiff');el.textContent=d===0?'E':(d>0?'+'+d:''+d);el.className='hud-diff '+(d<0?'under':d>0?'over':'even');document.getElementById('hudStats').textContent='Stroke '+(scores[holeIdx]||0)+' · Hole '+(holeIdx+1);const b=bonuses[holeIdx]||0;document.getElementById('statusText').textContent=b<0?playerName+' · ★ Bonus Active':b>0?playerName+' · ! Penalty':playerName+' · Drag to shoot';}
+
+// ════════════════════ PHYSICS ══════════════════════════════════════
+function update(dt){
+  if(ball.sinking){ball.sinkT+=dt*0.055;ball.r=BALL_R*(1-ball.sinkT);ball.x+=(currentHole.cup[0]-ball.x)*0.11;ball.y+=(currentHole.cup[1]-ball.y)*0.11;if(ball.sinkT>=1)ballSunk();return;}
+  if(!ballMoving)return;
+  for(const wm of windmills)wm.angle+=wm.speed*dt;
+  ball.vx*=Math.pow(FRICTION,dt);ball.vy*=Math.pow(FRICTION,dt);
+  ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;
+  const dynW=[];for(const wm of windmills)for(let b2=0;b2<2;b2++){const a=wm.angle+b2*Math.PI/2;dynW.push([wm.x-Math.cos(a)*wm.bladeLen,wm.y-Math.sin(a)*wm.bladeLen,wm.x+Math.cos(a)*wm.bladeLen,wm.y+Math.sin(a)*wm.bladeLen]);}
+  const allW=[...holeWalls,...dynW];
+  for(let it=0;it<5;it++){for(const w of allW)resSeg(ball,w[0],w[1],w[2],w[3]);for(const o of currentHole.obstacles)if(o.type==='circle')resCirc(ball,o.x,o.y,o.r);}
+  // Sand — extra friction when ball rolls in sand trap
+  for(const o of currentHole.obstacles){
+    if(o.type==='sand'&&inEllipse(ball.x,ball.y,o.x,o.y,o.rx,o.ry)){ball.vx*=0.87;ball.vy*=0.87;}
+  }
+  // Water — penalty stroke + respawn at last safe position
+  for(const o of currentHole.obstacles){
+    if(o.type==='water'&&inEllipse(ball.x,ball.y,o.x,o.y,o.rx,o.ry)){
+      scores[holeIdx]++;ball.x=lastSafeX;ball.y=lastSafeY;
+      ball.vx=0;ball.vy=0;ballMoving=false;waterPenaltyFlash=75;
+      document.getElementById('hudStats').textContent='Stroke '+scores[holeIdx]+' · 💧 Water +1';
+      SFX.bogey();break;
+    }
+  }
+  // Track last safe position (not in water)
+  if(!currentHole.obstacles.some(o=>o.type==='water'&&inEllipse(ball.x,ball.y,o.x,o.y,o.rx,o.ry))){
+    lastSafeX=ball.x;lastSafeY=ball.y;
+  }
+  // Out-of-bounds safety net — if ball leaves canvas, auto-reset
+  if(ball.x<0||ball.x>740||ball.y<0||ball.y>460){resetBall();return;}
+  if(Math.hypot(ball.vx,ball.vy)<0.12){ball.vx=0;ball.vy=0;ballMoving=false;}
+  if(Math.hypot(ball.x-currentHole.cup[0],ball.y-currentHole.cup[1])<CUP_R&&Math.hypot(ball.vx,ball.vy)<CUP_SPEED){ball.sinking=true;SFX.sink();}
+}
+function resetBall(){
+  if(ball.sinking)return;
+  scores[holeIdx]++;   // penalty stroke
+  ball.x=lastSafeX;ball.y=lastSafeY;
+  ball.vx=0;ball.vy=0;ballMoving=false;
+  waterPenaltyFlash=75;
+  document.getElementById('hudStats').textContent='Stroke '+scores[holeIdx]+' · ↺ Reset +1';
+  SFX.bogey();
+}
+function shoot(){if(ball.sinking||ballMoving)return;const dx=ball.x-dragX,dy=ball.y-dragY,dist=Math.hypot(dx,dy);if(dist<5)return;const power=Math.min(dist*DRAG_SCALE,MAX_POWER);ball.vx=(dx/dist)*power;ball.vy=(dy/dist)*power;ballMoving=true;SFX.swing();scores[holeIdx]++;if(scores[holeIdx]>=HOLES[holeIdx].par+5&&!ball.sinking){clearTimeout(_autoFinishTimer);(function(h){_autoFinishTimer=setTimeout(()=>{if(!ball.sinking&&holeIdx===h)finishHole();},3000);})(holeIdx);}document.getElementById('hudStats').textContent='Stroke '+scores[holeIdx]+' · Hole '+(holeIdx+1);document.getElementById('powerFill').style.width='0%';}
+function ballSunk(){
+  ball.sinking=false;
+  clearTimeout(_autoFinishTimer);_autoFinishTimer=null;
+  if(!scores[holeIdx])scores[holeIdx]=1;
+  if(rafId){cancelAnimationFrame(rafId);rafId=null;}
+  const s=effScore(holeIdx),par=HOLES[holeIdx].par,d=s-par;
+  let title='',sub='',rvType=null;
+  if(scores[holeIdx]===1){title='HOLE IN ONE!';sub='ACE ★';SFX.ace();rvType='eagle';}
+  else if(d<=-2){title='EAGLE!';sub='Eagle 🦅';SFX.eagle();rvType='eagle';}
+  else if(d===-1){title='BIRDIE!';sub='One Under Par 🐦';SFX.birdie();rvType='birdie';}
+  else if(d===0){title='PAR!';sub='Right on target';rvType='par';}
+  else if(d===1){title='BOGEY';sub='One Over Par';SFX.bogey();rvType='bogey';}
+  else{title='+'+d+' BOGEY';sub=d+' Over Par';SFX.bogey();rvType='bogey';}
+  const btext=bonuses[holeIdx]<0?' ★ Bonus!':(bonuses[holeIdx]>0?' ! Penalty':'');
+  // Show canvas notification briefly, then reaction video
+  document.getElementById('notifMain').textContent=title;
+  document.getElementById('notifSub').textContent=sub+btext;
+  document.getElementById('notifPopup').classList.add('show');
+  setTimeout(()=>{
+    document.getElementById('notifPopup').classList.remove('show');
+    showReactionVideo(rvType, title, ()=>finishHole());
+  },1200);
+}
+let _holeFinished=false,_autoFinishTimer=null,_inputBlocked=false;
+function finishHole(){if(_holeFinished)return;_holeFinished=true;if(rafId){cancelAnimationFrame(rafId);rafId=null;}holeIdx++;if(holeIdx>=TOTAL_HOLES){showFinal();return;}showTransition();}
+
+// ════════════════════ RENDER ═══════════════════════════════════════
+function render(){
+  const h=currentHole;
+  // Crowd video in rough
+  if(video.readyState>=2){ctx.drawImage(video,0,0,740,460);ctx.fillStyle='rgba(0,0,0,.48)';ctx.fillRect(0,0,740,460);}
+  else{ctx.fillStyle='#0d1a0c';ctx.fillRect(0,0,740,460);}
+  // Fairway shadow + fill
+  ctx.shadowColor='rgba(0,0,0,.55)';ctx.shadowBlur=20;ctx.shadowOffsetY=7;
+  ctx.fillStyle=h.bg;
+  ctx.beginPath();ctx.moveTo(h.boundary[0][0],h.boundary[0][1]);for(let i=1;i<h.boundary.length;i++)ctx.lineTo(h.boundary[i][0],h.boundary[i][1]);ctx.closePath();ctx.fill();
+  ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+  // Stripe texture clipped to fairway
+  ctx.save();ctx.beginPath();ctx.moveTo(h.boundary[0][0],h.boundary[0][1]);for(let i=1;i<h.boundary.length;i++)ctx.lineTo(h.boundary[i][0],h.boundary[i][1]);ctx.closePath();ctx.clip();ctx.fillStyle='rgba(0,0,0,.05)';for(let x=0;x<800;x+=28)ctx.fillRect(x,0,13,460);ctx.restore();
+  // Border
+  ctx.strokeStyle='#c8b560';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(h.boundary[0][0],h.boundary[0][1]);for(let i=1;i<h.boundary.length;i++)ctx.lineTo(h.boundary[i][0],h.boundary[i][1]);ctx.closePath();ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,200,.18)';ctx.lineWidth=2;ctx.stroke();
+  // Obstacles
+  for(const obs of h.obstacles){
+    if(obs.type==='wall'){ctx.strokeStyle='#c8b560';ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(obs.x1,obs.y1);ctx.lineTo(obs.x2,obs.y2);ctx.stroke();ctx.strokeStyle='rgba(255,255,200,.28)';ctx.lineWidth=2;ctx.stroke();}
+    if(obs.type==='circle'){ctx.fillStyle='rgba(0,0,0,.28)';ctx.beginPath();ctx.ellipse(obs.x+3,obs.y+5,obs.r,obs.r*.65,0,0,Math.PI*2);ctx.fill();const g=ctx.createRadialGradient(obs.x-obs.r*.3,obs.y-obs.r*.3,obs.r*.08,obs.x,obs.y,obs.r);g.addColorStop(0,'#8d6e63');g.addColorStop(1,'#4e342e');ctx.fillStyle=g;ctx.beginPath();ctx.arc(obs.x,obs.y,obs.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=2;ctx.stroke();}
+  }
+  // Sand traps & water hazards
+  for(const obs of h.obstacles){
+    if(obs.type==='sand'){
+      ctx.fillStyle='rgba(0,0,0,.2)';ctx.beginPath();ctx.ellipse(obs.x+3,obs.y+5,obs.rx,obs.ry*.65,0,0,Math.PI*2);ctx.fill();
+      const sg=ctx.createRadialGradient(obs.x-obs.rx*.25,obs.y-obs.ry*.25,2,obs.x,obs.y,Math.max(obs.rx,obs.ry));
+      sg.addColorStop(0,'#f5e6a3');sg.addColorStop(.55,'#d4a820');sg.addColorStop(1,'#a07810');
+      ctx.fillStyle=sg;ctx.beginPath();ctx.ellipse(obs.x,obs.y,obs.rx,obs.ry,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='rgba(180,130,30,.35)';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.ellipse(obs.x,obs.y,obs.rx*.65,obs.ry*.65,0,0,Math.PI*2);ctx.stroke();
+      for(let i=0;i<9;i++){const a=i/9*Math.PI*2;ctx.fillStyle='rgba(160,110,20,.45)';ctx.beginPath();ctx.arc(obs.x+Math.cos(a)*obs.rx*.72,obs.y+Math.sin(a)*obs.ry*.72,2,0,Math.PI*2);ctx.fill();}
+      ctx.fillStyle='rgba(100,60,0,.55)';ctx.font='bold 9px DM Mono,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('SAND',obs.x,obs.y);
+    }
+    if(obs.type==='water'){
+      ctx.fillStyle='rgba(0,0,0,.25)';ctx.beginPath();ctx.ellipse(obs.x+3,obs.y+6,obs.rx,obs.ry*.6,0,0,Math.PI*2);ctx.fill();
+      const wg=ctx.createRadialGradient(obs.x-obs.rx*.3,obs.y-obs.ry*.3,2,obs.x,obs.y,Math.max(obs.rx,obs.ry));
+      wg.addColorStop(0,'#82c4f8');wg.addColorStop(.45,'#1565c0');wg.addColorStop(1,'#0a3880');
+      ctx.fillStyle=wg;ctx.beginPath();ctx.ellipse(obs.x,obs.y,obs.rx,obs.ry,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.28)';ctx.lineWidth=1.5;
+      for(let r=1;r<=2;r++){ctx.beginPath();ctx.ellipse(obs.x,obs.y,obs.rx*(r*.28+.18),obs.ry*(r*.28+.18),0,0,Math.PI*2);ctx.stroke();}
+      ctx.fillStyle='rgba(255,255,255,.75)';ctx.font='bold 9px DM Mono,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('WATER',obs.x,obs.y);
+    }
+  }
+  // Water penalty flash overlay
+  if(waterPenaltyFlash>0){waterPenaltyFlash--;ctx.fillStyle='rgba(20,80,200,'+(waterPenaltyFlash/75*.4)+')';ctx.fillRect(0,0,740,460);}
+
+  // Windmills
+  for(const wm of windmills){ctx.fillStyle='#5d4037';ctx.beginPath();ctx.arc(wm.x,wm.y,8,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#8d6e63';ctx.lineWidth=2;ctx.stroke();for(let b=0;b<4;b++){const a=wm.angle+b*Math.PI/2,cos=Math.cos(a),sin=Math.sin(a),x1=wm.x-cos*wm.bladeLen,y1=wm.y-sin*wm.bladeLen,x2=wm.x+cos*wm.bladeLen,y2=wm.y+sin*wm.bladeLen;ctx.strokeStyle='rgba(0,0,0,.28)';ctx.lineWidth=BLADE_W+2;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x1+2,y1+2);ctx.lineTo(x2+2,y2+2);ctx.stroke();const bg=ctx.createLinearGradient(x1,y1,x2,y2);bg.addColorStop(0,'#e53935');bg.addColorStop(.5,'#ffcc02');bg.addColorStop(1,'#e53935');ctx.strokeStyle=bg;ctx.lineWidth=BLADE_W;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}ctx.fillStyle='#fff8e1';ctx.beginPath();ctx.arc(wm.x,wm.y,5,0,Math.PI*2);ctx.fill();}
+  // Tee
+  const[sx,sy]=h.start;ctx.fillStyle='rgba(255,255,255,.14)';ctx.beginPath();ctx.arc(sx,sy,14,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=1.5;ctx.stroke();ctx.fillStyle='rgba(255,255,255,.55)';ctx.font='bold 9px DM Mono,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('TEE',sx,sy);
+  // Cup
+  const[cx,cy]=h.cup;ctx.fillStyle='rgba(0,0,0,.38)';ctx.beginPath();ctx.ellipse(cx+3,cy+4,CUP_R,CUP_R*.58,0,0,Math.PI*2);ctx.fill();const cg=ctx.createRadialGradient(cx-3,cy-3,1,cx,cy,CUP_R);cg.addColorStop(0,'#1a1a1a');cg.addColorStop(1,'#000');ctx.fillStyle=cg;ctx.beginPath();ctx.arc(cx,cy,CUP_R,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.22)';ctx.lineWidth=1.5;ctx.stroke();ctx.strokeStyle='#d0d0d0';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,cy-CUP_R+2);ctx.lineTo(cx,cy-CUP_R-38);ctx.stroke();ctx.fillStyle='#f44336';ctx.beginPath();ctx.moveTo(cx,cy-CUP_R-38);ctx.lineTo(cx+20,cy-CUP_R-30);ctx.lineTo(cx,cy-CUP_R-22);ctx.closePath();ctx.fill();
+  // Aim
+  if(dragging&&!ballMoving&&!ball.sinking){const dx=ball.x-dragX,dy=ball.y-dragY,dist=Math.hypot(dx,dy);if(dist>=8){const nx=dx/dist,ny=dy/dist,power=Math.min(dist*DRAG_SCALE,MAX_POWER),pct=power/MAX_POWER,len=pct*155+20;ctx.save();ctx.setLineDash([6,6]);ctx.strokeStyle='rgba(255,255,255,'+(0.28+pct*.42)+')';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(ball.x,ball.y);ctx.lineTo(ball.x+nx*len,ball.y+ny*len);ctx.stroke();ctx.setLineDash([]);ctx.restore();const tx=ball.x+nx*len,ty=ball.y+ny*len,perp={x:-ny,y:nx};ctx.fillStyle='rgba(255,255,255,'+(0.48+pct*.42)+')';ctx.beginPath();ctx.moveTo(tx+nx*10,ty+ny*10);ctx.lineTo(tx+perp.x*6,ty+perp.y*6);ctx.lineTo(tx-perp.x*6,ty-perp.y*6);ctx.closePath();ctx.fill();document.getElementById('powerFill').style.width=(pct*100)+'%';}}
+  // Ball
+  if(ball.r>0){const r=ball.r;ctx.fillStyle='rgba(0,0,0,.32)';ctx.beginPath();ctx.ellipse(ball.x+3,ball.y+4,r,r*.6,0,0,Math.PI*2);ctx.fill();const bg=ctx.createRadialGradient(ball.x-r*.35,ball.y-r*.35,r*.04,ball.x,ball.y,r);bg.addColorStop(0,'#fff');bg.addColorStop(.5,'#f2f2f2');bg.addColorStop(1,'#ddd');ctx.fillStyle=bg;ctx.beginPath();ctx.arc(ball.x,ball.y,r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#f44336';ctx.lineWidth=r*.52;ctx.beginPath();ctx.arc(ball.x,ball.y,r*.38,0,Math.PI*2);ctx.stroke();ctx.fillStyle='rgba(255,255,255,.68)';ctx.beginPath();ctx.arc(ball.x-r*.3,ball.y-r*.3,r*.24,0,Math.PI*2);ctx.fill();}
+}
+function loop(ts){if(!lastTS)lastTS=ts;const dt=Math.min((ts-lastTS)/16.667,3);lastTS=ts;update(dt);render();rafId=requestAnimationFrame(loop);}
+
+// ════════════════════ INPUT ════════════════════════════════════════
+function getPos(e){const r=canvas.getBoundingClientRect();const cx=e.touches?e.touches[0].clientX:e.clientX,cy=e.touches?e.touches[0].clientY:e.clientY;return{x:(cx-r.left)*(740/r.width),y:(cy-r.top)*(460/r.height)};}
+canvas.addEventListener('mousedown',e=>{if(_inputBlocked||ballMoving||ball.sinking)return;const p=getPos(e);dragging=true;dragX=p.x;dragY=p.y;});
+canvas.addEventListener('mousemove',e=>{if(!dragging||ballMoving)return;const p=getPos(e);dragX=p.x;dragY=p.y;const dist=Math.hypot(ball.x-dragX,ball.y-dragY);document.getElementById('powerFill').style.width=(Math.min(dist*DRAG_SCALE/MAX_POWER,1)*100)+'%';});
+canvas.addEventListener('mouseup',  e=>{if(!dragging)return;const p=getPos(e);dragX=p.x;dragY=p.y;dragging=false;shoot();});
+canvas.addEventListener('mouseleave',()=>{if(dragging){dragging=false;document.getElementById('powerFill').style.width='0%';}});
+canvas.addEventListener('touchstart',e=>{e.preventDefault();canvas.dispatchEvent(new MouseEvent('mousedown',{clientX:e.touches[0].clientX,clientY:e.touches[0].clientY}));},{passive:false});
+canvas.addEventListener('touchmove', e=>{e.preventDefault();canvas.dispatchEvent(new MouseEvent('mousemove',{clientX:e.touches[0].clientX,clientY:e.touches[0].clientY}));},{passive:false});
+canvas.addEventListener('touchend',  e=>{e.preventDefault();canvas.dispatchEvent(new MouseEvent('mouseup',{clientX:e.changedTouches[0].clientX,clientY:e.changedTouches[0].clientY}));},{passive:false});
+// Escape-key hole skip removed
+
+// ════════════════════ SCORECARD / LEADERBOARD ══════════════════════
+function showFinal(){if(rafId){cancelAnimationFrame(rafId);rafId=null;}let html='<thead><tr><th>#</th>';for(let i=0;i<TOTAL_HOLES;i++)html+='<th style="font-size:9px;padding:5px 7px">'+(i+1)+'</th>';html+='<th>F9</th><th>B9</th><th>Total</th></tr></thead><tbody>';html+='<tr><td style="text-align:left;color:#f44336;font-size:12px">'+playerName+'</td>';let f9=0,b9=0;for(let i=0;i<TOTAL_HOLES;i++){const s=effScore(i),lbl=scoreLbl(s,HOLES[i].par),bm=bonuses[i]<0?'★':(bonuses[i]>0?'!':'');if(i<9)f9+=s;else b9+=s;html+='<td class="'+lbl.c+'" style="font-size:10px;padding:4px 6px">'+s+bm+'</td>';}const tot=f9+b9,diff=tot-TOTAL_PAR,ds=diff===0?'E':(diff>0?'+'+diff:''+diff);html+='<td><b>'+f9+'</b></td><td><b>'+b9+'</b></td><td><b>'+tot+'</b><br><small style="color:#7ec87e">('+ds+')</small></td></tr>';html+='<tr style="opacity:.4"><td style="text-align:left;font-size:10px;color:#7ec87e">Par</td>';let pf=0,pb=0;for(let i=0;i<TOTAL_HOLES;i++){const p=HOLES[i].par;i<9?pf+=p:pb+=p;html+='<td style="font-size:10px;padding:4px 6px">'+p+'</td>';}html+='<td>'+pf+'</td><td>'+pb+'</td><td>'+(pf+pb)+'</td></tr>';html+='</tbody><tfoot><tr><td colspan="'+(TOTAL_HOLES+4)+'" style="font-size:9px;color:rgba(126,200,126,.4);padding:6px 10px;text-align:left">★ correct (−1 stroke)  |  ! wrong (+1 stroke)  |  Correct: '+correctCt+'/'+TOTAL_HOLES+'</td></tr></tfoot>';document.getElementById('finalTable').innerHTML=html;document.getElementById('submitName').value=playerName;document.getElementById('submitStatus').textContent='';setScreen('finalScreen');}
+async function submitToLeaderboard(){const name=(document.getElementById('submitName').value.trim())||playerName,tot=scores.reduce((_,__,i)=>_+effScore(i),0),el=document.getElementById('submitStatus');el.textContent='Submitting…';const ok=await(window._fbSubmit?window._fbSubmit(name,tot,correctCt,tot-TOTAL_PAR):Promise.resolve(false));el.textContent=ok?'✅ Score submitted for '+name+'!':'⚠️ Could not connect to leaderboard.';}
+function openLeaderboard(){prevScreen=document.querySelector('.screen.active')?.id||'titleScreen';loadLeaderboardUI();}
+async function loadLeaderboardUI(){setScreen('leaderboardScreen');document.getElementById('lbBody').innerHTML='<tr><td colspan="5" style="color:rgba(126,200,126,.5);padding:18px">Loading…</td></tr>';const rows=await(window._fbLoad?window._fbLoad():Promise.resolve([]));if(!rows.length){document.getElementById('lbBody').innerHTML='<tr><td colspan="5" style="color:rgba(126,200,126,.5);padding:18px">No scores yet — be the first!</td></tr>';return;}const medals=['🥇','🥈','🥉'];let html='';rows.forEach((r,i)=>{const ds=r.vsPar===0?'E':(r.vsPar>0?'+'+r.vsPar:''+r.vsPar);html+='<tr><td>'+( medals[i]||'#'+(i+1))+'</td><td style="text-align:left">'+( r.name||'—')+'</td><td><b>'+(r.score||'—')+'</b></td><td style="color:'+(r.vsPar<=0?'#4caf50':'#ef5350')+'">'+ds+'</td><td style="color:#fde74c">★ '+(r.correctCt||0)+'</td></tr>';});document.getElementById('lbBody').innerHTML=html;}
+function goBack(){setScreen(prevScreen||'titleScreen');}
+function restartGame(){holeIdx=0;scores=Array(TOTAL_HOLES).fill(0);bonuses=Array(TOTAL_HOLES).fill(0);correctCt=0;usedQIdxs=[];setScreen('titleScreen');}
+</script>
+</body>
+</html>
