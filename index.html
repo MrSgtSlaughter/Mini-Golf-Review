@@ -125,6 +125,11 @@ body{background:#0d1a0c;font-family:'DM Mono',monospace;height:100vh;display:fle
 
 <video id="crowdVideo" src="crowd.mp4" loop muted playsinline preload="auto"
   style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px"></video>
+<!-- Preload reaction videos into browser cache -->
+<video src="eagle.mp4"  preload="auto" muted playsinline style="display:none"></video>
+<video src="birdie.mp4" preload="auto" muted playsinline style="display:none"></video>
+<video src="par.mp4"    preload="auto" muted playsinline style="display:none"></video>
+<video src="bogey.mp4"  preload="auto" muted playsinline style="display:none"></video>
 <audio id="bgMusic" loop></audio>
 
 <!-- Score reaction overlay (video src set from blob at runtime) -->
@@ -644,7 +649,7 @@ function ballSunk(){
     document.getElementById('notifPopup').classList.remove('show');
     if(holeIdx!==_sunkOnHole)return;  // stale — hole already advanced
     showReactionVideo(rvType, title, ()=>finishHole());
-  },1200);
+  },600);
 }
 let _holeFinished=false,_inputBlocked=false,_transLocked=false,_waterCooldown=false,_notifTimer=null;
 function finishHole(){if(_holeFinished)return;if(!document.getElementById('gameScreen').classList.contains('active')&&!document.getElementById('reactionOverlay').style.display.includes('flex'))return;_holeFinished=true;if(rafId){cancelAnimationFrame(rafId);rafId=null;}holeIdx++;if(holeIdx>=TOTAL_HOLES){showFinal();return;}showTransition();}
