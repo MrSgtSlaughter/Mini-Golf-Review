@@ -456,38 +456,42 @@ function toggleMute(){
   document.getElementById('muteBtn').textContent=musicMuted?'🔇':'🔊';
 }
 
-// Reaction video system — direct src, muted start so autoplay always works
-const RV_FILES={eagle:'eagle.mp4',birdie:'birdie.mp4',par:'par.mp4',bogey:'bogey.mp4'};
-
-function showReactionVideo(type,label,cb){
-  const file=RV_FILES[type];
-  const overlay=document.getElementById('reactionOverlay');
-  const vid=document.getElementById('reactionActive');
-  const lbl=document.getElementById('reactionLabel');
-  if(!file){cb();return;}
-  lbl.textContent=label;
-  overlay.style.display='flex';
-  let done=false;
-  const finish=()=>{
-    if(done)return;done=true;
-    overlay.style.display='none';
+// Reaction video system
+const REACTION_FILES = {
+  eagle: 'eagle.mp4',
+  birdie: 'birdie.mp4',
+  par: 'par.mp4',
+  bogey: 'bogey.mp4'
+};
+function showReactionVideo(type, label, cb) {
+  const overlay = document.getElementById('reactionOverlay');
+  const vid = document.getElementById('reactionActive');
+  const lbl = document.getElementById('reactionLabel');
+  lbl.textContent = label;
+  vid.src = REACTION_FILES[type];
+  vid.muted = true;
+  vid.preload = 'auto';
+  overlay.style.display = 'flex';
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    overlay.style.display = 'none';
     vid.pause();
-    vid.src='';
-    overlay.onclick=null;
+    vid.removeAttribute('src');
+    overlay.onclick = null;
     cb();
   };
-  vid.src=file;
-  vid.muted=true;
-  vid.load();
-  const t=setTimeout(finish,8000);
-  vid.oncanplay=()=>{
-    vid.oncanplay=null;
-    vid.play().then(()=>{vid.muted=false;}).catch(finish);
-  };
-  vid.onended=()=>{clearTimeout(t);finish();};
-  vid.onerror =()=>{clearTimeout(t);finish();};
-  overlay.onclick=()=>{clearTimeout(t);finish();};
+  const t = setTimeout(finish, 8000);
+  vid.onended = () => { clearTimeout(t); finish(); };
+  vid.onerror = () => { clearTimeout(t); finish(); };
+  overlay.onclick = () => { clearTimeout(t); finish(); };
+  vid.play().catch(() => {
+    clearTimeout(t);
+    finish();
+  });
 }
+
 
 // ════════════════════ STATE ════════════════════════════════════════
 const BALL_R=9,CUP_R=13,CUP_SPEED=4.8,FRICTION=0.983,BOUNCE=0.58,MAX_POWER=17,DRAG_SCALE=0.135,BLADE_W=7;
@@ -519,7 +523,14 @@ function showTransition(){
   if(holeIdx>0){const tot=scores.slice(0,holeIdx).reduce((_,__,i)=>_+effScore(i),0),par=HOLES.slice(0,holeIdx).reduce((a,hh)=>a+hh.par,0),diff=tot-par;document.getElementById('transScore').textContent='Total: '+tot+' ('+( diff===0?'Even':diff>0?'+'+diff+' over':Math.abs(diff)+' under')+' par)';}
   else document.getElementById('transScore').textContent='';
   setScreen('transitionScreen');
-  document.getElementById('transitionScreen').onclick=()=>{document.getElementById('transitionScreen').onclick=null;showQuestion();};
+  _transLocked=true;
+  setTimeout(()=>{
+    _transLocked=false;
+    document.getElementById('transitionScreen').onclick=()=>{
+      document.getElementById('transitionScreen').onclick=null;
+      showQuestion();
+    };
+  },400);
 }
 function pickQ(){let pool=QUESTIONS.map((_,i)=>i).filter(i=>!usedQIdxs.slice(-8).includes(i));if(!pool.length)pool=QUESTIONS.map((_,i)=>i);const idx=pool[Math.floor(Math.random()*pool.length)];usedQIdxs.push(idx);if(usedQIdxs.length>30)usedQIdxs.shift();return QUESTIONS[idx];}
 function showQuestion(){
@@ -561,9 +572,10 @@ function showQuestion(){
     row.append(inp,sub);body.insertBefore(row,fb);setTimeout(()=>inp.focus(),80);
   }
   setScreen('questionScreen');
+  document.getElementById('qContinue').disabled=false;
 }
-function questionDone(){initHole(holeIdx);updateHUD();setScreen('gameScreen');if(rafId)cancelAnimationFrame(rafId);lastTS=0;rafId=requestAnimationFrame(loop);}
-function initHole(idx){_holeFinished=false;clearTimeout(_autoFinishTimer);_autoFinishTimer=null;lastSafeX=HOLES[idx].start[0];lastSafeY=HOLES[idx].start[1];waterPenaltyFlash=0;dragging=false;_inputBlocked=true;setTimeout(()=>{_inputBlocked=false;},350);currentHole=HOLES[idx];holeWalls=polyWalls(currentHole.boundary);for(const o of currentHole.obstacles)if(o.type==='wall')holeWalls.push([o.x1,o.y1,o.x2,o.y2]);windmills=currentHole.obstacles.filter(o=>o.type==='windmill').map(o=>({...o,angle:0}));ball.x=currentHole.start[0];ball.y=currentHole.start[1];ball.vx=0;ball.vy=0;ball.r=BALL_R;ball.sinking=false;ball.sinkT=0;ballMoving=false;dragging=false;if(!scores[idx])scores[idx]=0;}
+function questionDone(){const btn=document.getElementById('qContinue');if(btn.disabled)return;btn.disabled=true;initHole(holeIdx);updateHUD();setScreen('gameScreen');if(rafId)cancelAnimationFrame(rafId);lastTS=0;rafId=requestAnimationFrame(loop);}
+function initHole(idx){_holeFinished=false;_waterCooldown=false;clearTimeout(_notifTimer);_notifTimer=null;lastSafeX=HOLES[idx].start[0];lastSafeY=HOLES[idx].start[1];waterPenaltyFlash=0;dragging=false;_inputBlocked=true;setTimeout(()=>{_inputBlocked=false;},600);currentHole=HOLES[idx];holeWalls=polyWalls(currentHole.boundary);for(const o of currentHole.obstacles)if(o.type==='wall')holeWalls.push([o.x1,o.y1,o.x2,o.y2]);windmills=currentHole.obstacles.filter(o=>o.type==='windmill').map(o=>({...o,angle:0}));ball.x=currentHole.start[0];ball.y=currentHole.start[1];ball.vx=0;ball.vy=0;ball.r=BALL_R;ball.sinking=false;ball.sinkT=0;ballMoving=false;dragging=false;scores[idx]=0;}
 function updateHUD(){const h=HOLES[holeIdx],nine=holeIdx<9?'Front 9':'Back 9';document.getElementById('hudName').textContent='Hole '+(holeIdx+1)+': '+h.name;document.getElementById('hudPar').textContent='Par '+h.par+' · '+nine;document.getElementById('hudHoleNum').textContent=(holeIdx+1)+'/18';let tot=0,par=0;for(let i=0;i<=holeIdx;i++){tot+=i<holeIdx?effScore(i):(scores[i]||0);par+=HOLES[i].par;}const d=tot-par,el=document.getElementById('hudDiff');el.textContent=d===0?'E':(d>0?'+'+d:''+d);el.className='hud-diff '+(d<0?'under':d>0?'over':'even');document.getElementById('hudStats').textContent='Stroke '+(scores[holeIdx]||0)+' · Hole '+(holeIdx+1);const b=bonuses[holeIdx]||0;document.getElementById('statusText').textContent=b<0?playerName+' · ★ Bonus Active':b>0?playerName+' · ! Penalty':playerName+' · Drag to shoot';}
 
 // ════════════════════ PHYSICS ══════════════════════════════════════
@@ -582,9 +594,10 @@ function update(dt){
   }
   // Water — penalty stroke + respawn at last safe position
   for(const o of currentHole.obstacles){
-    if(o.type==='water'&&inEllipse(ball.x,ball.y,o.x,o.y,o.rx,o.ry)){
+    if(o.type==='water'&&inEllipse(ball.x,ball.y,o.x,o.y,o.rx,o.ry)&&!_waterCooldown){
       scores[holeIdx]++;ball.x=lastSafeX;ball.y=lastSafeY;
       ball.vx=0;ball.vy=0;ballMoving=false;waterPenaltyFlash=75;
+      _waterCooldown=true;setTimeout(()=>{_waterCooldown=false;},1200);
       document.getElementById('hudStats').textContent='Stroke '+scores[holeIdx]+' · 💧 Water +1';
       SFX.bogey();break;
     }
@@ -607,11 +620,9 @@ function resetBall(){
   document.getElementById('hudStats').textContent='Stroke '+scores[holeIdx]+' · ↺ Reset +1';
   SFX.bogey();
 }
-function shoot(){if(ball.sinking||ballMoving)return;const dx=ball.x-dragX,dy=ball.y-dragY,dist=Math.hypot(dx,dy);if(dist<5)return;const power=Math.min(dist*DRAG_SCALE,MAX_POWER);ball.vx=(dx/dist)*power;ball.vy=(dy/dist)*power;ballMoving=true;SFX.swing();scores[holeIdx]++;if(scores[holeIdx]>=HOLES[holeIdx].par+5&&!ball.sinking){clearTimeout(_autoFinishTimer);(function(h){_autoFinishTimer=setTimeout(()=>{if(!ball.sinking&&holeIdx===h)finishHole();},3000);})(holeIdx);}document.getElementById('hudStats').textContent='Stroke '+scores[holeIdx]+' · Hole '+(holeIdx+1);document.getElementById('powerFill').style.width='0%';}
+function shoot(){if(ball.sinking||ballMoving)return;const dx=ball.x-dragX,dy=ball.y-dragY,dist=Math.hypot(dx,dy);if(dist<5)return;const power=Math.min(dist*DRAG_SCALE,MAX_POWER);ball.vx=(dx/dist)*power;ball.vy=(dy/dist)*power;ballMoving=true;SFX.swing();scores[holeIdx]++;document.getElementById('hudStats').textContent='Stroke '+scores[holeIdx]+' · Hole '+(holeIdx+1);document.getElementById('powerFill').style.width='0%';}
 function ballSunk(){
   ball.sinking=false;
-  clearTimeout(_autoFinishTimer);_autoFinishTimer=null;
-  if(!scores[holeIdx])scores[holeIdx]=1;
   if(rafId){cancelAnimationFrame(rafId);rafId=null;}
   const s=effScore(holeIdx),par=HOLES[holeIdx].par,d=s-par;
   let title='',sub='',rvType=null;
@@ -626,13 +637,17 @@ function ballSunk(){
   document.getElementById('notifMain').textContent=title;
   document.getElementById('notifSub').textContent=sub+btext;
   document.getElementById('notifPopup').classList.add('show');
-  setTimeout(()=>{
+  const _sunkOnHole=holeIdx;
+  clearTimeout(_notifTimer);
+  _notifTimer=setTimeout(()=>{
+    _notifTimer=null;
     document.getElementById('notifPopup').classList.remove('show');
+    if(holeIdx!==_sunkOnHole)return;  // stale — hole already advanced
     showReactionVideo(rvType, title, ()=>finishHole());
   },1200);
 }
-let _holeFinished=false,_autoFinishTimer=null,_inputBlocked=false;
-function finishHole(){if(_holeFinished)return;_holeFinished=true;if(rafId){cancelAnimationFrame(rafId);rafId=null;}holeIdx++;if(holeIdx>=TOTAL_HOLES){showFinal();return;}showTransition();}
+let _holeFinished=false,_inputBlocked=false,_transLocked=false,_waterCooldown=false,_notifTimer=null;
+function finishHole(){if(_holeFinished)return;if(!document.getElementById('gameScreen').classList.contains('active')&&!document.getElementById('reactionOverlay').style.display.includes('flex'))return;_holeFinished=true;if(rafId){cancelAnimationFrame(rafId);rafId=null;}holeIdx++;if(holeIdx>=TOTAL_HOLES){showFinal();return;}showTransition();}
 
 // ════════════════════ RENDER ═══════════════════════════════════════
 function render(){
@@ -697,7 +712,7 @@ function loop(ts){if(!lastTS)lastTS=ts;const dt=Math.min((ts-lastTS)/16.667,3);l
 function getPos(e){const r=canvas.getBoundingClientRect();const cx=e.touches?e.touches[0].clientX:e.clientX,cy=e.touches?e.touches[0].clientY:e.clientY;return{x:(cx-r.left)*(740/r.width),y:(cy-r.top)*(460/r.height)};}
 canvas.addEventListener('mousedown',e=>{if(_inputBlocked||ballMoving||ball.sinking)return;const p=getPos(e);dragging=true;dragX=p.x;dragY=p.y;});
 canvas.addEventListener('mousemove',e=>{if(!dragging||ballMoving)return;const p=getPos(e);dragX=p.x;dragY=p.y;const dist=Math.hypot(ball.x-dragX,ball.y-dragY);document.getElementById('powerFill').style.width=(Math.min(dist*DRAG_SCALE/MAX_POWER,1)*100)+'%';});
-canvas.addEventListener('mouseup',  e=>{if(!dragging)return;const p=getPos(e);dragX=p.x;dragY=p.y;dragging=false;shoot();});
+canvas.addEventListener('mouseup',  e=>{if(!dragging||_inputBlocked)return;const p=getPos(e);dragX=p.x;dragY=p.y;dragging=false;shoot();});
 canvas.addEventListener('mouseleave',()=>{if(dragging){dragging=false;document.getElementById('powerFill').style.width='0%';}});
 canvas.addEventListener('touchstart',e=>{e.preventDefault();canvas.dispatchEvent(new MouseEvent('mousedown',{clientX:e.touches[0].clientX,clientY:e.touches[0].clientY}));},{passive:false});
 canvas.addEventListener('touchmove', e=>{e.preventDefault();canvas.dispatchEvent(new MouseEvent('mousemove',{clientX:e.touches[0].clientX,clientY:e.touches[0].clientY}));},{passive:false});
