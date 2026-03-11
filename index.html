@@ -118,6 +118,18 @@ body{background:#0d1a0c;font-family:'DM Mono',monospace;height:100vh;display:fle
 .lb-status{font-size:11px;color:rgba(126,200,126,.6);letter-spacing:2px;text-align:center}
 .sc-scroll{max-height:280px;overflow-y:auto}
 .sc-scroll::-webkit-scrollbar{width:4px}
+.course-cards{display:flex;gap:20px;justify-content:center;width:100%;flex-wrap:wrap}
+.course-card{flex:1;min-width:220px;max-width:280px;background:rgba(0,0,0,.55);border:2px solid rgba(76,175,80,.25);border-radius:18px;padding:22px 18px;text-align:center;cursor:pointer;transition:border-color .2s,transform .15s;display:flex;flex-direction:column;align-items:center;gap:8px}
+.course-card:hover{border-color:#4caf50;transform:translateY(-2px)}
+.course-card.expert{border-color:rgba(244,67,54,.3)}
+.course-card.expert:hover{border-color:#f44336}
+.course-num{font-family:'Playfair Display',serif;font-size:13px;font-weight:700;letter-spacing:3px;color:#7ec87e;text-transform:uppercase}
+.course-num.red{color:#ef5350}
+.course-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#fde74c}
+.course-detail{font-size:11px;color:rgba(245,240,232,.65);line-height:1.7}
+.course-badge{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:700;letter-spacing:1px}
+.badge-std{background:rgba(76,175,80,.2);color:#7ec87e;border:1px solid rgba(76,175,80,.3)}
+.badge-exp{background:rgba(244,67,54,.15);color:#ef5350;border:1px solid rgba(244,67,54,.3)}
 .sc-scroll::-webkit-scrollbar-thumb{background:#2a5a25;border-radius:4px}
 </style>
 </head>
@@ -158,6 +170,30 @@ body{background:#0d1a0c;font-family:'DM Mono',monospace;height:100vh;display:fle
     <button class="tee-btn" onclick="startGame()">TEE OFF ⛳</button>
     <button class="lb-open-btn" onclick="openLeaderboard()">🏆 Board</button>
   </div>
+</div>
+
+<!-- COURSE SELECT -->
+<div id="courseScreen" class="screen">
+  <div class="flag-deco">⛳</div>
+  <div class="bigTitle" style="font-size:30px;margin-bottom:4px">Choose Your Course</div>
+  <div class="tagline" style="margin-bottom:18px">Ancient China Edition</div>
+  <div class="course-cards">
+    <div class="course-card" onclick="selectCourse(1)">
+      <div class="course-num">Course 1</div>
+      <div class="course-title">The Ancient Road</div>
+      <div class="course-detail">18 Holes · Par 74<br>Standard obstacles<br>±1 stroke per question</div>
+      <span class="course-badge badge-std">STANDARD</span>
+      <button class="tee-btn" style="font-size:13px;padding:10px 22px;margin-top:4px">Play ⛳</button>
+    </div>
+    <div class="course-card expert" onclick="selectCourse(2)">
+      <div class="course-num red">Course 2</div>
+      <div class="course-title" style="color:#ff8a65">The Dragon's Back</div>
+      <div class="course-detail">18 Holes · Par 87<br>Tighter gaps · More hazards<br>±2 strokes per question</div>
+      <span class="course-badge badge-exp">⚠️ EXPERT</span>
+      <button class="tee-btn" style="font-size:13px;padding:10px 22px;margin-top:4px;background:linear-gradient(135deg,#b71c1c,#d32f2f)">Challenge 🐉</button>
+    </div>
+  </div>
+  <button class="btn-outline" style="margin-top:14px" onclick="setScreen('titleScreen')">← Back</button>
 </div>
 
 <!-- TRANSITION -->
@@ -220,6 +256,7 @@ body{background:#0d1a0c;font-family:'DM Mono',monospace;height:100vh;display:fle
 <!-- FINAL -->
 <div id="finalScreen" class="screen">
   <div class="final-title">🏆 Round Complete!</div>
+  <div id="finalCourseTag" style="font-size:13px;color:#7ec87e;letter-spacing:1px;margin-top:-8px"></div>
   <div class="sc-scroll"><table class="scorecard" id="finalTable"></table></div>
   <div class="submit-score-area">
     <div class="section-label" style="color:rgba(126,200,126,.7)">Submit score to leaderboard</div>
@@ -243,7 +280,7 @@ body{background:#0d1a0c;font-family:'DM Mono',monospace;height:100vh;display:fle
     </table>
   </div>
   <div class="row-btns">
-    <button class="btn-green"   onclick="loadLeaderboardUI()">🔄 Refresh</button>
+    <button class="btn-green"   onclick="loadLeaderboardUI(_lbCourse)">🔄 Refresh</button>
     <button class="btn-outline" onclick="goBack()">← Back</button>
   </div>
 </div>
@@ -266,11 +303,13 @@ body{background:#0d1a0c;font-family:'DM Mono',monospace;height:100vh;display:fle
     firebase.initializeApp(cfg);
     const db=firebase.firestore();
     window._fbSubmit=async(name,score,correctCt,vsPar)=>{
-      try{await db.collection('minigolf_scores').add({name,score,correctCt,vsPar,date:firebase.firestore.FieldValue.serverTimestamp()});return true;}
+      const col=window.currentCourse===2?'minigolf_scores_c2':'minigolf_scores';
+      try{await db.collection(col).add({name,score,correctCt,vsPar,date:firebase.firestore.FieldValue.serverTimestamp()});return true;}
       catch(e){console.error('FB write:',e);return false;}
     };
-    window._fbLoad=async()=>{
-      try{const s=await db.collection('minigolf_scores').orderBy('score','asc').limit(15).get();return s.docs.map(d=>({id:d.id,...d.data()}));}
+    window._fbLoad=async(course)=>{
+      const col=course===2?'minigolf_scores_c2':'minigolf_scores';
+      try{const s=await db.collection(col).orderBy('score','asc').limit(15).get();return s.docs.map(d=>({id:d.id,...d.data()}));}
       catch(e){console.error('FB read:',e);return[];}
     };
     console.log('⛳ Firebase ready — city-states-5adaf');
@@ -311,7 +350,7 @@ const QUESTIONS=[
 ];
 
 // ════════════════════ HOLES ════════════════════════════════════════
-const HOLES=[
+const HOLES_C1=[
 // H1: The Drive — straight with two sand traps. Par 3. Shortcut: blast it hard up the middle, miss both traps = par 2 chance.
 {name:'The Drive',par:3,bg:'#2d6e27',start:[80,230],cup:[665,230],
  boundary:[[35,178],[705,178],[705,282],[35,282]],
@@ -416,7 +455,143 @@ const HOLES=[
             {type:'circle',x:430,y:268,r:24},{type:'windmill',x:555,y:230,bladeLen:55,speed:-0.038},
             {type:'water',x:252,y:183,rx:36,ry:26},{type:'water',x:488,y:278,rx:36,ry:26}]}
 ]
-const TOTAL_HOLES=18, TOTAL_PAR=HOLES.reduce((a,h)=>a+h.par,0);
+const HOLES_C2=[
+{name:'Slalom',par:3,bg:'#2d6e27',start:[80,230],cup:[640,230],
+ boundary:[[35,172],[705,172],[705,288],[35,288]],
+ obstacles:[// C2-H1
+  {type:'wall',x1:195,y1:172,x2:195,y2:205},{type:'wall',x1:195,y1:255,x2:195,y2:288},
+  {type:'wall',x1:360,y1:172,x2:360,y2:212},{type:'wall',x1:360,y1:248,x2:360,y2:288},
+  {type:'wall',x1:525,y1:172,x2:525,y2:217},{type:'wall',x1:525,y1:243,x2:525,y2:288},
+  {type:'sand',x:140,y:230,rx:40,ry:22},{type:'water',x:445,y:230,rx:40,ry:22}]},
+{name:'The Corkscrew',par:5,bg:'#245c1f',start:[80,150],cup:[630,330],
+ boundary:[[35,50],[450,50],[450,205],[705,205],[705,420],[280,420],[280,265],[35,265]],
+ obstacles:[// C2-H2
+  {type:'windmill',x:550,y:310,bladeLen:52,speed:0.038},
+  {type:'sand',x:185,y:150,rx:42,ry:28},{type:'water',x:375,y:355,rx:42,ry:28}]},
+{name:'Gauntlet Gate',par:4,bg:'#2a6525',start:[80,230],cup:[640,230],
+ boundary:[[35,172],[705,172],[705,288],[35,288]],
+ obstacles:[// C2-H3
+  {type:'wall',x1:210,y1:172,x2:210,y2:210},{type:'wall',x1:210,y1:250,x2:210,y2:288},
+  {type:'windmill',x:370,y:230,bladeLen:52,speed:0.042},
+  {type:'wall',x1:530,y1:172,x2:530,y2:210},{type:'wall',x1:530,y1:250,x2:530,y2:288},
+  {type:'water',x:450,y:230,rx:36,ry:22}]},
+{name:'Wind Farm',par:5,bg:'#245c1f',start:[80,230],cup:[640,230],
+ boundary:[[35,140],[705,140],[705,320],[35,320]],
+ obstacles:[// C2-H4
+  {type:'windmill',x:185,y:230,bladeLen:70,speed:0.032},
+  {type:'water',x:278,y:230,rx:40,ry:26},
+  {type:'windmill',x:370,y:230,bladeLen:70,speed:-0.048},
+  {type:'water',x:462,y:230,rx:40,ry:26},
+  {type:'windmill',x:555,y:230,bladeLen:70,speed:0.040}]},
+{name:'The Fortress',par:5,bg:'#2a6525',start:[80,130],cup:[360,340],
+ boundary:[[35,50],[705,50],[705,215],[440,215],[440,415],[35,415]],
+ obstacles:[// C2-H5
+  {type:'windmill',x:230,y:130,bladeLen:58,speed:0.042},
+  {type:'circle',x:430,y:130,r:26},
+  {type:'water',x:580,y:130,rx:44,ry:28},
+  {type:'windmill',x:195,y:330,bladeLen:52,speed:-0.038},
+  {type:'sand',x:330,y:330,rx:42,ry:26}]},
+{name:'The Colosseum',par:5,bg:'#2d6e27',start:[80,230],cup:[640,230],
+ boundary:[[35,95],[705,95],[705,365],[35,365]],
+ obstacles:[// C2-H6
+  {type:'circle',x:185,y:230,r:28},{type:'circle',x:370,y:140,r:28},
+  {type:'circle',x:555,y:230,r:28},{type:'circle',x:370,y:320,r:28},
+  {type:'sand',x:278,y:175,rx:38,ry:26},{type:'water',x:462,y:285,rx:38,ry:26}]},
+{name:'Pinball Machine',par:5,bg:'#2a6525',start:[80,230],cup:[640,230],
+ boundary:[[35,95],[705,95],[705,365],[35,365]],
+ obstacles:[// C2-H7
+  {type:'circle',x:160,y:162,r:26},{type:'circle',x:315,y:298,r:26},
+  {type:'circle',x:470,y:162,r:26},{type:'circle',x:470,y:298,r:26},
+  {type:'circle',x:625,y:162,r:26},
+  {type:'sand',x:238,y:230,rx:38,ry:26},{type:'water',x:545,y:230,rx:38,ry:26}]},
+{name:'The Labyrinth',par:6,bg:'#1d4a19',start:[80,80],cup:[640,380],
+ boundary:[[35,35],[705,35],[705,425],[35,425]],
+ obstacles:[// C2-H8
+  {type:'wall',x1:35,y1:128,x2:575,y2:128},
+  {type:'wall',x1:130,y1:233,x2:705,y2:233},
+  {type:'wall',x1:35,y1:338,x2:575,y2:338},
+  {type:'wall',x1:575,y1:35,x2:575,y2:128},
+  {type:'wall',x1:130,y1:338,x2:130,y2:425},
+  {type:'sand',x:620,y:80,rx:42,ry:32},{type:'water',x:90,y:288,rx:36,ry:28}]},
+{name:'Triple Windmill',par:5,bg:'#245c1f',start:[80,230],cup:[640,230],
+ boundary:[[35,148],[705,148],[705,312],[35,312]],
+ obstacles:[// C2-H9
+  {type:'windmill',x:185,y:230,bladeLen:72,speed:0.035},
+  {type:'water',x:278,y:230,rx:38,ry:28},
+  {type:'windmill',x:370,y:230,bladeLen:72,speed:-0.050},
+  {type:'water',x:462,y:230,rx:38,ry:28},
+  {type:'windmill',x:555,y:230,bladeLen:72,speed:0.042}]},
+{name:'The Canyon',par:4,bg:'#2a6525',start:[80,235],cup:[620,135],
+ boundary:[[35,195],[380,195],[380,95],[705,95],[705,175],[460,175],[460,275],[35,275]],
+ obstacles:[// C2-H10
+  {type:'sand',x:185,y:235,rx:40,ry:22},{type:'water',x:590,y:135,rx:40,ry:24}]},
+{name:'Twin Mills',par:4,bg:'#2d6e27',start:[80,230],cup:[640,230],
+ boundary:[[35,163],[705,163],[705,297],[35,297]],
+ obstacles:[// C2-H11
+  {type:'windmill',x:185,y:230,bladeLen:60,speed:0.045},
+  {type:'wall',x1:320,y1:163,x2:320,y2:210},{type:'wall',x1:320,y1:250,x2:320,y2:297},
+  {type:'water',x:425,y:230,rx:36,ry:26},
+  {type:'windmill',x:540,y:230,bladeLen:60,speed:-0.038}]},
+{name:'The T-Bone',par:5,bg:'#2a6525',start:[80,125],cup:[370,340],
+ boundary:[[35,50],[705,50],[705,200],[440,200],[440,415],[280,415],[280,200],[35,200]],
+ obstacles:[// C2-H12
+  {type:'windmill',x:370,y:125,bladeLen:62,speed:0.038},
+  {type:'circle',x:530,y:125,r:28},
+  {type:'water',x:200,y:125,rx:44,ry:28},
+  {type:'sand',x:370,y:310,rx:38,ry:26}]},
+{name:'The Boneyard',par:5,bg:'#245c1f',start:[80,230],cup:[640,230],
+ boundary:[[35,100],[705,100],[705,360],[35,360]],
+ obstacles:[// C2-H13
+  {type:'windmill',x:163,y:230,bladeLen:62,speed:0.048},
+  {type:'circle',x:268,y:175,r:26},
+  {type:'windmill',x:370,y:230,bladeLen:62,speed:-0.042},
+  {type:'circle',x:472,y:285,r:26},
+  {type:'windmill',x:577,y:230,bladeLen:62,speed:0.052},
+  {type:'sand',x:268,y:285,rx:36,ry:24},{type:'water',x:472,y:175,rx:36,ry:24}]},
+{name:'The Deadlock',par:4,bg:'#2d6e27',start:[80,230],cup:[640,230],
+ boundary:[[35,178],[705,178],[705,282],[35,282]],
+ obstacles:[// C2-H14
+  {type:'wall',x1:175,y1:230,x2:175,y2:282},
+  {type:'wall',x1:310,y1:178,x2:310,y2:230},
+  {type:'wall',x1:445,y1:230,x2:445,y2:282},
+  {type:'wall',x1:580,y1:178,x2:580,y2:230},
+  {type:'sand',x:240,y:205,rx:36,ry:20},{type:'water',x:510,y:255,rx:36,ry:20}]},
+{name:'The Ricochet',par:4,bg:'#2a6525',start:[80,230],cup:[640,230],
+ boundary:[[35,95],[705,95],[705,365],[35,365]],
+ obstacles:[// C2-H15
+  {type:'wall',x1:200,y1:95,x2:310,y2:365},
+  {type:'wall',x1:430,y1:365,x2:540,y2:95},
+  {type:'sand',x:148,y:230,rx:40,ry:26},{type:'water',x:600,y:230,rx:40,ry:26}]},
+{name:'Moat Castle',par:5,bg:'#2d6e27',start:[80,230],cup:[640,230],
+ boundary:[[35,65],[705,65],[705,395],[35,395]],
+ obstacles:[// C2-H16
+  {type:'circle',x:370,y:230,r:60},
+  {type:'water',x:220,y:148,rx:46,ry:30},{type:'water',x:520,y:148,rx:46,ry:30},
+  {type:'water',x:220,y:312,rx:46,ry:30},{type:'water',x:520,y:312,rx:46,ry:30}]},
+{name:'The Gauntlet II',par:6,bg:'#1d4a19',start:[80,130],cup:[360,340],
+ boundary:[[35,50],[705,50],[705,215],[440,215],[440,415],[35,415]],
+ obstacles:[// C2-H17
+  {type:'windmill',x:245,y:130,bladeLen:58,speed:0.042},
+  {type:'circle',x:435,y:130,r:26},
+  {type:'water',x:580,y:130,rx:42,ry:28},
+  {type:'wall',x1:35,y1:295,x2:310,y2:295},
+  {type:'windmill',x:200,y:340,bladeLen:50,speed:-0.045},
+  {type:'sand',x:335,y:345,rx:38,ry:26}]},
+{name:"The Emperor's Challenge",par:7,bg:'#1d4a19',start:[80,230],cup:[640,230],
+ boundary:[[35,85],[705,85],[705,375],[35,375]],
+ obstacles:[// C2-H18
+  {type:'windmill',x:148,y:230,bladeLen:68,speed:0.052},
+  {type:'circle',x:260,y:178,r:24},
+  {type:'water',x:308,y:282,rx:36,ry:26},
+  {type:'wall',x1:370,y1:85,x2:370,y2:208},{type:'wall',x1:370,y1:252,x2:370,y2:375},
+  {type:'water',x:432,y:178,rx:36,ry:26},
+  {type:'circle',x:480,y:282,r:24},
+  {type:'windmill',x:555,y:230,bladeLen:68,speed:-0.045},
+  {type:'windmill',x:638,y:180,bladeLen:42,speed:0.060},
+  {type:'sand',x:200,y:275,rx:38,ry:24}]}
+];
+const TOTAL_HOLES=18;
+let HOLES=HOLES_C1, TOTAL_PAR=HOLES_C1.reduce((a,h)=>a+h.par,0);
 
 // ════════════════════ AUDIO ════════════════════════════════════════
 let AC,musicMuted=false,selectedSong='';
@@ -524,6 +699,7 @@ function showReactionVideo(type, label, cb) {
 
 // ════════════════════ STATE ════════════════════════════════════════
 const BALL_R=9,CUP_R=13,CUP_SPEED=4.8,FRICTION=0.983,BOUNCE=0.58,MAX_POWER=17,DRAG_SCALE=0.135,BLADE_W=7;
+let currentCourse=1,bonusAmt=1;
 let playerName='',holeIdx=0,scores=Array(TOTAL_HOLES).fill(0),bonuses=Array(TOTAL_HOLES).fill(0),correctCt=0,usedQIdxs=[],prevScreen='titleScreen';
 let ball={x:0,y:0,vx:0,vy:0,sinking:false,sinkT:0,r:BALL_R};
 let lastSafeX=80,lastSafeY=230,waterPenaltyFlash=0;
@@ -546,7 +722,15 @@ function effScore(h){return Math.max(1,scores[h]+bonuses[h]);}
 function scoreLbl(s,par){const d=s-par;if(s===1)return{t:'ACE!',c:'score-ace'};if(d<=-2)return{t:'Eagle',c:'score-eagle'};if(d===-1)return{t:'Birdie',c:'score-birdie'};if(d===0)return{t:'Par',c:'score-par'};if(d===1)return{t:'Bogey',c:'score-bogey'};return{t:'+'+d,c:'score-dbl'};}
 
 // ════════════════════ FLOW ═════════════════════════════════════════
-function startGame(){ensureAC();playerName=(document.getElementById('playerName').value.trim())||'Player';scores=Array(TOTAL_HOLES).fill(0);bonuses=Array(TOTAL_HOLES).fill(0);correctCt=0;usedQIdxs=[];holeIdx=0;video.play().catch(()=>{});startMusic();showTransition();}
+function startGame(){ensureAC();playerName=(document.getElementById('playerName').value.trim())||'Player';startMusic();setScreen('courseScreen');}
+function selectCourse(n){
+  currentCourse=n;bonusAmt=n===2?2:1;
+  HOLES=n===2?HOLES_C2:HOLES_C1;
+  TOTAL_PAR=HOLES.reduce((a,h)=>a+h.par,0);
+  scores=Array(TOTAL_HOLES).fill(0);bonuses=Array(TOTAL_HOLES).fill(0);
+  correctCt=0;usedQIdxs=[];holeIdx=0;
+  video.play().catch(()=>{});showTransition();
+}
 function showTransition(){
   const h=HOLES[holeIdx];
   document.getElementById('transNum').textContent=holeIdx+1;
@@ -567,7 +751,7 @@ function showTransition(){
 function pickQ(){let pool=QUESTIONS.map((_,i)=>i).filter(i=>!usedQIdxs.slice(-8).includes(i));if(!pool.length)pool=QUESTIONS.map((_,i)=>i);const idx=pool[Math.floor(Math.random()*pool.length)];usedQIdxs.push(idx);if(usedQIdxs.length>30)usedQIdxs.shift();return QUESTIONS[idx];}
 function showQuestion(){
   const q=pickQ();
-  document.getElementById('qBadge').textContent='⛳ '+playerName+' — Hole '+(holeIdx+1)+' of '+TOTAL_HOLES;
+  document.getElementById('qBadge').textContent=(currentCourse===2?'🐉':'⛳')+' '+playerName+' — Hole '+(holeIdx+1)+' of '+TOTAL_HOLES+(currentCourse===2?' · Expert':'');
   document.getElementById('qType').textContent=q.type==='mc'?'Multiple Choice':'Fill in the Blank';
   document.getElementById('qText').textContent=q.q;
   const body=document.getElementById('qBody');
@@ -587,7 +771,7 @@ function showQuestion(){
         if(fb.className!=='q-feedback')return;
         const ok=(i===shuffledAns);
         wrap.querySelectorAll('.q-option').forEach((b,j)=>{if(j===shuffledAns)b.classList.add('correct');else if(j===i&&!ok)b.classList.add('wrong');b.onclick=null;});
-        ok?(bonuses[holeIdx]=-1,correctCt++,SFX.correct(),fb.className='q-feedback show-c',fb.innerHTML='✅ <b>Correct!</b> '+q.explain+' <span style="color:#4caf50;margin-left:6px">−1 Stroke Bonus!</span>'):(bonuses[holeIdx]=1,SFX.wrong(),fb.className='q-feedback show-w',fb.innerHTML='❌ <b>Incorrect.</b> Answer: <b style="color:#fde74c">'+correctText+'</b>. '+q.explain+' <span style="color:#f44336;margin-left:6px">+1 Stroke Penalty</span>');
+        ok?(bonuses[holeIdx]=-bonusAmt,correctCt++,SFX.correct(),fb.className='q-feedback show-c',fb.innerHTML='✅ <b>Correct!</b> '+q.explain+' <span style="color:#4caf50;margin-left:6px">−'+bonusAmt+' Stroke Bonus!</span>'):(bonuses[holeIdx]=bonusAmt,SFX.wrong(),fb.className='q-feedback show-w',fb.innerHTML='❌ <b>Incorrect.</b> Answer: <b style="color:#fde74c">'+correctText+'</b>. '+q.explain+' <span style="color:#f44336;margin-left:6px">+'+bonusAmt+' Stroke Penalty</span>');
         cont.style.display='block';
       };
       wrap.appendChild(btn);
@@ -601,7 +785,7 @@ function showQuestion(){
       if(fb.className!=='q-feedback'||!inp.value.trim())return;
       const ok=inp.value.trim().toLowerCase()===q.ans.toLowerCase();
       inp.classList.add(ok?'correct':'wrong');inp.disabled=true;sub.disabled=true;
-      ok?(bonuses[holeIdx]=-1,correctCt++,SFX.correct(),fb.className='q-feedback show-c',fb.innerHTML='✅ <b>Correct!</b> '+q.explain+' <span style="color:#4caf50;margin-left:6px">−1 Stroke Bonus!</span>'):(bonuses[holeIdx]=1,SFX.wrong(),fb.className='q-feedback show-w',fb.innerHTML='❌ <b>Incorrect.</b> Answer: <b style="color:#fde74c">'+q.display+'</b>. '+q.explain+' <span style="color:#f44336;margin-left:6px">+1 Stroke Penalty</span>');
+      ok?(bonuses[holeIdx]=-bonusAmt,correctCt++,SFX.correct(),fb.className='q-feedback show-c',fb.innerHTML='✅ <b>Correct!</b> '+q.explain+' <span style="color:#4caf50;margin-left:6px">−'+bonusAmt+' Stroke Bonus!</span>'):(bonuses[holeIdx]=bonusAmt,SFX.wrong(),fb.className='q-feedback show-w',fb.innerHTML='❌ <b>Incorrect.</b> Answer: <b style="color:#fde74c">'+q.display+'</b>. '+q.explain+' <span style="color:#f44336;margin-left:6px">+'+bonusAmt+' Stroke Penalty</span>');
       cont.style.display='block';
     };
     inp.onkeydown=e=>{if(e.key==='Enter')submit();};sub.onclick=submit;
@@ -759,7 +943,7 @@ canvas.addEventListener('touchend',  e=>{e.preventDefault();canvas.dispatchEvent
 // Escape-key hole skip removed
 
 // ════════════════════ SCORECARD / LEADERBOARD ══════════════════════
-function showFinal(){if(rafId){cancelAnimationFrame(rafId);rafId=null;}let html='<thead><tr><th>#</th>';for(let i=0;i<TOTAL_HOLES;i++)html+='<th style="font-size:9px;padding:5px 7px">'+(i+1)+'</th>';html+='<th>F9</th><th>B9</th><th>Total</th></tr></thead><tbody>';html+='<tr><td style="text-align:left;color:#f44336;font-size:12px">'+playerName+'</td>';let f9=0,b9=0;for(let i=0;i<TOTAL_HOLES;i++){const s=effScore(i),lbl=scoreLbl(s,HOLES[i].par),bm=bonuses[i]<0?'★':(bonuses[i]>0?'!':'');if(i<9)f9+=s;else b9+=s;html+='<td class="'+lbl.c+'" style="font-size:10px;padding:4px 6px">'+s+bm+'</td>';}const tot=f9+b9,diff=tot-TOTAL_PAR,ds=diff===0?'E':(diff>0?'+'+diff:''+diff);html+='<td><b>'+f9+'</b></td><td><b>'+b9+'</b></td><td><b>'+tot+'</b><br><small style="color:#7ec87e">('+ds+')</small></td></tr>';html+='<tr style="opacity:.4"><td style="text-align:left;font-size:10px;color:#7ec87e">Par</td>';let pf=0,pb=0;for(let i=0;i<TOTAL_HOLES;i++){const p=HOLES[i].par;i<9?pf+=p:pb+=p;html+='<td style="font-size:10px;padding:4px 6px">'+p+'</td>';}html+='<td>'+pf+'</td><td>'+pb+'</td><td>'+(pf+pb)+'</td></tr>';html+='</tbody><tfoot><tr><td colspan="'+(TOTAL_HOLES+4)+'" style="font-size:9px;color:rgba(126,200,126,.4);padding:6px 10px;text-align:left">★ correct (−1 stroke)  |  ! wrong (+1 stroke)  |  Correct: '+correctCt+'/'+TOTAL_HOLES+'</td></tr></tfoot>';document.getElementById('finalTable').innerHTML=html;document.getElementById('submitName').value=playerName;document.getElementById('submitStatus').textContent='';const sb=document.querySelector('.btn-gold');if(sb){sb.disabled=false;sb.textContent='Submit 🏆';}setScreen('finalScreen');}
+function showFinal(){if(rafId){cancelAnimationFrame(rafId);rafId=null;}let html='<thead><tr><th>#</th>';for(let i=0;i<TOTAL_HOLES;i++)html+='<th style="font-size:9px;padding:5px 7px">'+(i+1)+'</th>';html+='<th>F9</th><th>B9</th><th>Total</th></tr></thead><tbody>';html+='<tr><td style="text-align:left;color:#f44336;font-size:12px">'+playerName+'</td>';let f9=0,b9=0;for(let i=0;i<TOTAL_HOLES;i++){const s=effScore(i),lbl=scoreLbl(s,HOLES[i].par),bm=bonuses[i]<0?'★':(bonuses[i]>0?'!':'');if(i<9)f9+=s;else b9+=s;html+='<td class="'+lbl.c+'" style="font-size:10px;padding:4px 6px">'+s+bm+'</td>';}const tot=f9+b9,diff=tot-TOTAL_PAR,ds=diff===0?'E':(diff>0?'+'+diff:''+diff);html+='<td><b>'+f9+'</b></td><td><b>'+b9+'</b></td><td><b>'+tot+'</b><br><small style="color:#7ec87e">('+ds+')</small></td></tr>';html+='<tr style="opacity:.4"><td style="text-align:left;font-size:10px;color:#7ec87e">Par</td>';let pf=0,pb=0;for(let i=0;i<TOTAL_HOLES;i++){const p=HOLES[i].par;i<9?pf+=p:pb+=p;html+='<td style="font-size:10px;padding:4px 6px">'+p+'</td>';}html+='<td>'+pf+'</td><td>'+pb+'</td><td>'+(pf+pb)+'</td></tr>';html+='</tbody><tfoot><tr><td colspan="'+(TOTAL_HOLES+4)+'" style="font-size:9px;color:rgba(126,200,126,.4);padding:6px 10px;text-align:left">★ correct (−'+bonusAmt+' stroke)  |  ! wrong (+'+bonusAmt+' stroke)  |  Correct: '+correctCt+'/'+TOTAL_HOLES+'</td></tr></tfoot>';document.getElementById('finalTable').innerHTML=html;document.getElementById('finalCourseTag').textContent=currentCourse===2?'🐉 Course 2 — The Dragon\'s Back':'⛳ Course 1 — The Ancient Road';document.getElementById('submitName').value=playerName;document.getElementById('submitStatus').textContent='';const sb=document.querySelector('.btn-gold');if(sb){sb.disabled=false;sb.textContent='Submit 🏆';}setScreen('finalScreen');}
 async function submitToLeaderboard(){
   if(_scoreSubmitted)return;
   const btn=document.querySelector('.btn-gold');
@@ -778,8 +962,21 @@ async function submitToLeaderboard(){
     if(btn){btn.disabled=false;btn.textContent='Submit 🏆';}
   }
 }
-function openLeaderboard(){prevScreen=document.querySelector('.screen.active')?.id||'titleScreen';loadLeaderboardUI();}
-async function loadLeaderboardUI(){setScreen('leaderboardScreen');document.getElementById('lbBody').innerHTML='<tr><td colspan="5" style="color:rgba(126,200,126,.5);padding:18px">Loading…</td></tr>';const rows=await(window._fbLoad?window._fbLoad():Promise.resolve([]));if(!rows.length){document.getElementById('lbBody').innerHTML='<tr><td colspan="5" style="color:rgba(126,200,126,.5);padding:18px">No scores yet — be the first!</td></tr>';return;}const medals=['🥇','🥈','🥉'];let html='';rows.forEach((r,i)=>{const ds=r.vsPar===0?'E':(r.vsPar>0?'+'+r.vsPar:''+r.vsPar);html+='<tr><td>'+( medals[i]||'#'+(i+1))+'</td><td style="text-align:left">'+( r.name||'—')+'</td><td><b>'+(r.score||'—')+'</b></td><td style="color:'+(r.vsPar<=0?'#4caf50':'#ef5350')+'">'+ds+'</td><td style="color:#fde74c">★ '+(r.correctCt||0)+'</td></tr>';});document.getElementById('lbBody').innerHTML=html;}
+function openLeaderboard(){prevScreen=document.querySelector('.screen.active')?.id||'titleScreen';loadLeaderboardUI(currentCourse);}
+let _lbCourse=1;
+async function loadLeaderboardUI(course){
+  if(course!==undefined)_lbCourse=course;
+  document.getElementById('lbTab1').classList.toggle('sel',_lbCourse===1);
+  document.getElementById('lbTab2').classList.toggle('sel',_lbCourse===2);
+  setScreen('leaderboardScreen');
+  document.getElementById('lbBody').innerHTML='<tr><td colspan="5" style="color:rgba(126,200,126,.5);padding:18px">Loading…</td></tr>';
+  const rows=await(window._fbLoad?window._fbLoad(_lbCourse):Promise.resolve([]));
+  if(!rows.length){document.getElementById('lbBody').innerHTML='<tr><td colspan="5" style="color:rgba(126,200,126,.5);padding:18px">No scores yet!</td></tr>';return;}
+  const medals=['🥇','🥈','🥉'];let html='';
+  rows.forEach((r,i)=>{const ds=r.vsPar===0?'E':(r.vsPar>0?'+'+r.vsPar:''+r.vsPar);
+  html+='<tr><td>'+(medals[i]||'#'+(i+1))+'</td><td style="text-align:left">'+(r.name||'—')+'</td><td><b>'+(r.score||'—')+'</b></td><td style="color:'+(r.vsPar<=0?'#4caf50':'#ef5350')+'">'+ds+'</td><td style="color:#fde74c">★ '+(r.correctCt||0)+'</td></tr>';});
+  document.getElementById('lbBody').innerHTML=html;
+}
 function goBack(){setScreen(prevScreen||'titleScreen');}
 function restartGame(){
   if(rafId){cancelAnimationFrame(rafId);rafId=null;}
@@ -789,6 +986,8 @@ function restartGame(){
   currentHole=null;lastTS=0;
   _holeFinished=false;_inputBlocked=false;_transLocked=false;
   _waterCooldown=false;_scoreSubmitted=false;dragging=false;ballMoving=false;
+  currentCourse=1;bonusAmt=1;HOLES=HOLES_C1;
+  TOTAL_PAR=HOLES_C1.reduce((a,h)=>a+h.par,0);
   setScreen('titleScreen');
 }
 </script>
