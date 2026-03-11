@@ -995,13 +995,20 @@ async function submitToLeaderboard(){
     if(btn){btn.disabled=false;btn.textContent='Submit 🏆';}
   }
 }
-function openLeaderboard(){prevScreen=document.querySelector('.screen.active')?.id||'titleScreen';loadLeaderboardUI(currentCourse);}
-let _lbCourse=1;
-async function loadLeaderboardUI(course){
-  if(course!==undefined)_lbCourse=course;
+function openLeaderboard(){
+  prevScreen=document.querySelector('.screen.active')?.id||'titleScreen';
+  setScreen('leaderboardScreen');
+  const lbBody=document.getElementById('lbBody');
+  lbBody.innerHTML='<tr><td colspan="5" style="color:rgba(126,200,126,.5);padding:18px">Loading…</td></tr>';
+  _lbCourse=currentCourse;
   const t1=document.getElementById('lbTab1'),t2=document.getElementById('lbTab2');
   if(t1)t1.classList.toggle('sel',_lbCourse===1);
   if(t2)t2.classList.toggle('sel',_lbCourse===2);
+  _doLoadLB();
+}
+let _lbCourse=1;
+async function loadLeaderboardUI(course){
+  if(course!==undefined){_lbCourse=course;const t1=document.getElementById('lbTab1'),t2=document.getElementById('lbTab2');if(t1)t1.classList.toggle('sel',_lbCourse===1);if(t2)t2.classList.toggle('sel',_lbCourse===2);}
   setScreen('leaderboardScreen');
   const lbBody=document.getElementById('lbBody');
   lbBody.innerHTML='<tr><td colspan="5" style="color:rgba(126,200,126,.5);padding:18px">Loading…</td></tr>';
@@ -1017,6 +1024,7 @@ async function loadLeaderboardUI(course){
   html+='<tr><td>'+(medals[i]||'#'+(i+1))+'</td><td style="text-align:left">'+(r.name||'—')+'</td><td><b>'+(r.score||'—')+'</b></td><td style="color:'+(r.vsPar<=0?'#4caf50':'#ef5350')+'">'+ds+'</td><td style="color:#fde74c">★ '+(r.correctCt||0)+'</td></tr>';});
   lbBody.innerHTML=html;
 }
+async function _doLoadLB(){await loadLeaderboardUI();}
 function goBack(){setScreen(prevScreen||'titleScreen');}
 function restartGame(){
   if(rafId){cancelAnimationFrame(rafId);rafId=null;}
