@@ -145,9 +145,10 @@ body{background:#0d1a0c;font-family:'DM Mono',monospace;height:100vh;display:fle
 <audio id="bgMusic" loop></audio>
 
 <!-- Score reaction overlay (video src set from blob at runtime) -->
-<div id="reactionOverlay" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.88);align-items:center;justify-content:center;flex-direction:column;gap:16px">
+<div id="reactionOverlay" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.88);align-items:center;justify-content:center;flex-direction:column;gap:16px;cursor:pointer">
   <video id="reactionActive" playsinline muted style="max-width:680px;max-height:450px;border-radius:16px;box-shadow:0 0 60px rgba(253,231,76,.4)"></video>
-  <div id="reactionLabel" style="font-family:'Playfair Display',serif;font-size:36px;font-weight:900;color:#fde74c;text-shadow:3px 3px 0 #a8960a;letter-spacing:2px"></div>
+  <div id="reactionLabel" style="color:#fde74c;font-size:2rem;font-weight:bold;text-shadow:0 0 20px rgba(253,231,76,.6)"></div>
+  <div style="color:rgba(255,255,255,.4);font-size:.85rem">tap to skip</div>
 </div>
 
 <!-- TITLE -->
@@ -691,9 +692,10 @@ function showReactionVideo(type, label, cb) {
   const vid = document.getElementById('reactionActive');
   const lbl = document.getElementById('reactionLabel');
   lbl.textContent = label;
-  vid.src = REACTION_FILES[type];
+  // Mute ALL audio on the reaction video — no browser error sounds
   vid.muted = true;
-  vid.preload = 'auto';
+  vid.volume = 0;
+  vid.src = REACTION_FILES[type];
   overlay.style.display = 'flex';
   let done = false;
   const finish = () => {
@@ -701,18 +703,16 @@ function showReactionVideo(type, label, cb) {
     done = true;
     overlay.style.display = 'none';
     vid.pause();
+    vid.muted = true;
     vid.removeAttribute('src');
     overlay.onclick = null;
     cb();
   };
   const t = setTimeout(finish, 8000);
   vid.onended = () => { clearTimeout(t); finish(); };
-  vid.onerror = () => { clearTimeout(t); finish(); };
+  vid.onerror  = () => { clearTimeout(t); finish(); }; // silent skip if file missing
   overlay.onclick = () => { clearTimeout(t); finish(); };
-  vid.play().catch(() => {
-    clearTimeout(t);
-    finish();
-  });
+  vid.play().catch(() => { clearTimeout(t); finish(); });
 }
 
 
@@ -894,13 +894,13 @@ function ballSunk(){
     _notifTimer=null;
     document.getElementById('notifPopup').classList.remove('show');
     if(holeIdx!==_sunkOnHole)return;  // stale — hole already advanced
-    showReactionVideo(rvType, title, ()=>finishHole());
+    if(rvType)showReactionVideo(rvType,title,()=>finishHole());
+    else finishHole();
   },600);
 }
 let _holeFinished=false,_inputBlocked=false,_transLocked=false,_waterCooldown=false,_notifTimer=null,_scoreSubmitted=false;
 function finishHole(){
   if(_holeFinished)return;
-  // Only block if we're on a totally unrelated screen (title/course/leaderboard)
   const s=document.querySelector('.screen.active');
   if(s&&(s.id==='titleScreen'||s.id==='courseScreen'||s.id==='leaderboardScreen'))return;
   _holeFinished=true;
@@ -999,23 +999,23 @@ function openLeaderboard(){prevScreen=document.querySelector('.screen.active')?.
 let _lbCourse=1;
 async function loadLeaderboardUI(course){
   if(course!==undefined)_lbCourse=course;
-  document.getElementById('lbTab1').classList.toggle('sel',_lbCourse===1);
-  document.getElementById('lbTab2').classList.toggle('sel',_lbCourse===2);
+  const t1=document.getElementById('lbTab1'),t2=document.getElementById('lbTab2');
+  if(t1)t1.classList.toggle('sel',_lbCourse===1);
+  if(t2)t2.classList.toggle('sel',_lbCourse===2);
   setScreen('leaderboardScreen');
-  document.getElementById('lbBody').innerHTML='<tr><td colspan="5" style="color:rgba(126,200,126,.5);padding:18px">Loading…</td></tr>';
+  const lbBody=document.getElementById('lbBody');
+  lbBody.innerHTML='<tr><td colspan="5" style="color:rgba(126,200,126,.5);padding:18px">Loading…</td></tr>';
   const rows=await(window._fbLoad?window._fbLoad(_lbCourse):Promise.resolve([]));
-  if(rows===null){
-    const msg=window._fbLastError||'Unknown';
-    document.getElementById('lbBody').innerHTML='<tr><td colspan="5" style="color:#ef5350;padding:14px">'
-      +'⚠️ Could not load scores — check Firestore rules allow public read.<br>'
-      +'<small style="opacity:.5">'+msg+'</small></td></tr>';
+  if(!rows||rows===null){
+    const msg=window._fbLastError||'Connection error';
+    lbBody.innerHTML='<tr><td colspan="5" style="color:#ef5350;padding:14px">⚠️ '+msg+'</td></tr>';
     return;
   }
-  if(!rows.length){document.getElementById('lbBody').innerHTML='<tr><td colspan="5" style="color:rgba(126,200,126,.5);padding:18px">No scores yet — be the first!</td></tr>';return;}
+  if(!rows.length){lbBody.innerHTML='<tr><td colspan="5" style="color:rgba(126,200,126,.5);padding:18px">No scores yet — be the first!</td></tr>';return;}
   const medals=['🥇','🥈','🥉'];let html='';
   rows.forEach((r,i)=>{const ds=r.vsPar===0?'E':(r.vsPar>0?'+'+r.vsPar:''+r.vsPar);
   html+='<tr><td>'+(medals[i]||'#'+(i+1))+'</td><td style="text-align:left">'+(r.name||'—')+'</td><td><b>'+(r.score||'—')+'</b></td><td style="color:'+(r.vsPar<=0?'#4caf50':'#ef5350')+'">'+ds+'</td><td style="color:#fde74c">★ '+(r.correctCt||0)+'</td></tr>';});
-  document.getElementById('lbBody').innerHTML=html;
+  lbBody.innerHTML=html;
 }
 function goBack(){setScreen(prevScreen||'titleScreen');}
 function restartGame(){
