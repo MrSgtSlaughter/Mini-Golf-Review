@@ -286,34 +286,54 @@ body{background:#0d1a0c;font-family:'DM Mono',monospace;height:100vh;display:fle
 </div>
 
 <!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
+// Firestore REST API — no SDK needed, works from any origin
 (function(){
-  const cfg={
-    apiKey:"AIzaSyC3ie3lyR5wXHePSci7LsGgOQqud937wAY",
-    authDomain:"city-states-5adaf.firebaseapp.com",
-    databaseURL:"https://city-states-5adaf-default-rtdb.firebaseio.com",
-    projectId:"city-states-5adaf",
-    storageBucket:"city-states-5adaf.firebasestorage.app",
-    messagingSenderId:"83957079489",
-    appId:"1:83957079489:web:6e3d6a416320caa86b2340"
+  const PROJECT='minigolf-fd9ea';
+  const APIKEY='AIzaSyCNaryK6uqyztfnOqWZqh9LlhDjoqTsHwY';
+  const BASE=`https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`;
+
+  window._fbSubmit=async(name,score,correctCt,vsPar)=>{
+    const col=window.currentCourse===2?'minigolf_scores_c2':'minigolf_scores';
+    const body={fields:{
+      name:{stringValue:name},
+      score:{integerValue:String(score)},
+      correctCt:{integerValue:String(correctCt)},
+      vsPar:{integerValue:String(vsPar)},
+      date:{stringValue:new Date().toISOString()}
+    }};
+    try{
+      const r=await fetch(`${BASE}/${col}?key=${APIKEY}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      if(!r.ok){const t=await r.text();window._fbLastError=t;return false;}
+      return true;
+    }catch(e){window._fbLastError=e.message;return false;}
   };
-  try{
-    firebase.initializeApp(cfg);
-    const db=firebase.firestore();
-    window._fbSubmit=async(name,score,correctCt,vsPar)=>{
-      const col=window.currentCourse===2?'minigolf_scores_c2':'minigolf_scores';
-      try{await db.collection(col).add({name,score,correctCt,vsPar,date:firebase.firestore.FieldValue.serverTimestamp()});return true;}
-      catch(e){console.error('FB write:',e);return false;}
-    };
-    window._fbLoad=async(course)=>{
-      const col=course===2?'minigolf_scores_c2':'minigolf_scores';
-      try{const s=await db.collection(col).orderBy('score','asc').limit(15).get();return s.docs.map(d=>({id:d.id,...d.data()}));}
-      catch(e){console.error('FB read:',e);return[];}
-    };
-    console.log('⛳ Firebase ready — city-states-5adaf');
-  }catch(e){console.error('Firebase init:',e);window._fbSubmit=async()=>false;window._fbLoad=async()=>[];}
+
+  window._fbLoad=async(course)=>{
+    const col=course===2?'minigolf_scores_c2':'minigolf_scores';
+    const query={structuredQuery:{
+      from:[{collectionId:col}],
+      orderBy:[{field:{fieldPath:'score'},direction:'ASCENDING'}],
+      limit:15
+    }};
+    try{
+      const r=await fetch(`${BASE}:runQuery?key=${APIKEY}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(query)});
+      if(!r.ok){const t=await r.text();window._fbLastError=t;return null;}
+      const docs=await r.json();
+      return docs
+        .filter(d=>d.document)
+        .map(d=>{
+          const f=d.document.fields||{};
+          return{
+            name:f.name?.stringValue||'',
+            score:parseInt(f.score?.integerValue||0),
+            correctCt:parseInt(f.correctCt?.integerValue||0),
+            vsPar:parseInt(f.vsPar?.integerValue||0)
+          };
+        });
+    }catch(e){window._fbLastError=e.message;return null;}
+  };
+  console.log('⛳ Firebase REST ready — minigolf-fd9ea');
 })();
 </script>
 
@@ -510,7 +530,6 @@ const HOLES_C2=[
   {type:'wall',x1:35,y1:128,x2:575,y2:128},
   {type:'wall',x1:130,y1:233,x2:705,y2:233},
   {type:'wall',x1:35,y1:338,x2:575,y2:338},
-  {type:'wall',x1:575,y1:35,x2:575,y2:128},
   {type:'wall',x1:130,y1:338,x2:130,y2:425},
   {type:'sand',x:620,y:80,rx:42,ry:32},{type:'water',x:90,y:288,rx:36,ry:28}]},
 {name:'Triple Windmill',par:5,bg:'#245c1f',start:[80,230],cup:[640,230],
@@ -521,7 +540,7 @@ const HOLES_C2=[
   {type:'windmill',x:370,y:230,bladeLen:72,speed:-0.050},
   {type:'water',x:462,y:230,rx:38,ry:28},
   {type:'windmill',x:555,y:230,bladeLen:72,speed:0.042}]},
-{name:'The Canyon',par:4,bg:'#2a6525',start:[80,235],cup:[620,135],
+{name:'The Canyon',par:4,bg:'#2a6525',start:[80,235],cup:[658,135],
  boundary:[[35,195],[380,195],[380,95],[705,95],[705,175],[460,175],[460,275],[35,275]],
  obstacles:[// C2-H10
   {type:'sand',x:185,y:235,rx:40,ry:22},{type:'water',x:590,y:135,rx:40,ry:24}]},
@@ -556,12 +575,12 @@ const HOLES_C2=[
   {type:'wall',x1:445,y1:230,x2:445,y2:282},
   {type:'wall',x1:580,y1:178,x2:580,y2:230},
   {type:'sand',x:240,y:205,rx:36,ry:20},{type:'water',x:510,y:255,rx:36,ry:20}]},
-{name:'The Ricochet',par:4,bg:'#2a6525',start:[80,230],cup:[640,230],
+{name:'The Ricochet',par:4,bg:'#2a6525',start:[80,230],cup:[665,230],
  boundary:[[35,95],[705,95],[705,365],[35,365]],
  obstacles:[// C2-H15
   {type:'wall',x1:200,y1:95,x2:310,y2:365},
   {type:'wall',x1:430,y1:365,x2:540,y2:95},
-  {type:'sand',x:148,y:230,rx:40,ry:26},{type:'water',x:600,y:230,rx:40,ry:26}]},
+  {type:'sand',x:148,y:230,rx:40,ry:26},{type:'water',x:370,y:230,rx:38,ry:22}]},
 {name:'Moat Castle',par:5,bg:'#2d6e27',start:[80,230],cup:[640,230],
  boundary:[[35,65],[705,65],[705,395],[35,395]],
  obstacles:[// C2-H16
@@ -794,7 +813,7 @@ function showQuestion(){
   setScreen('questionScreen');
   document.getElementById('qContinue').disabled=false;
 }
-function questionDone(){const btn=document.getElementById('qContinue');if(btn.disabled)return;btn.disabled=true;initHole(holeIdx);updateHUD();setScreen('gameScreen');if(rafId)cancelAnimationFrame(rafId);lastTS=0;rafId=requestAnimationFrame(loop);}
+function questionDone(){const btn=document.getElementById('qContinue');if(btn.disabled)return;btn.disabled=true;initHole(holeIdx);updateHUD();setScreen('gameScreen');video.play().catch(()=>{});if(rafId)cancelAnimationFrame(rafId);lastTS=0;rafId=requestAnimationFrame(loop);}
 function initHole(idx){_holeFinished=false;_waterCooldown=false;clearTimeout(_notifTimer);_notifTimer=null;lastSafeX=HOLES[idx].start[0];lastSafeY=HOLES[idx].start[1];waterPenaltyFlash=0;dragging=false;_inputBlocked=true;setTimeout(()=>{_inputBlocked=false;},600);currentHole=HOLES[idx];holeWalls=polyWalls(currentHole.boundary);for(const o of currentHole.obstacles)if(o.type==='wall')holeWalls.push([o.x1,o.y1,o.x2,o.y2]);windmills=currentHole.obstacles.filter(o=>o.type==='windmill').map(o=>({...o,angle:0}));ball.x=currentHole.start[0];ball.y=currentHole.start[1];ball.vx=0;ball.vy=0;ball.r=BALL_R;ball.sinking=false;ball.sinkT=0;ballMoving=false;dragging=false;scores[idx]=0;}
 function updateHUD(){const h=HOLES[holeIdx],nine=holeIdx<9?'Front 9':'Back 9';document.getElementById('hudName').textContent='Hole '+(holeIdx+1)+': '+h.name;document.getElementById('hudPar').textContent='Par '+h.par+' · '+nine;document.getElementById('hudHoleNum').textContent=(holeIdx+1)+'/18';let tot=0,par=0;for(let i=0;i<=holeIdx;i++){tot+=i<holeIdx?effScore(i):(scores[i]||0);par+=HOLES[i].par;}const d=tot-par,el=document.getElementById('hudDiff');el.textContent=d===0?'E':(d>0?'+'+d:''+d);el.className='hud-diff '+(d<0?'under':d>0?'over':'even');document.getElementById('hudStats').textContent='Stroke '+(scores[holeIdx]||0)+' · Hole '+(holeIdx+1);const b=bonuses[holeIdx]||0;document.getElementById('statusText').textContent=b<0?playerName+' · ★ Bonus Active':b>0?playerName+' · ! Penalty':playerName+' · Drag to shoot';}
 
@@ -803,11 +822,15 @@ function update(dt){
   if(ball.sinking){ball.sinkT+=dt*0.055;ball.r=BALL_R*(1-ball.sinkT);ball.x+=(currentHole.cup[0]-ball.x)*0.11;ball.y+=(currentHole.cup[1]-ball.y)*0.11;if(ball.sinkT>=1)ballSunk();return;}
   if(!ballMoving)return;
   for(const wm of windmills)wm.angle+=wm.speed*dt;
-  ball.vx*=Math.pow(FRICTION,dt);ball.vy*=Math.pow(FRICTION,dt);
-  ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;
+  // 4 physics substeps: prevents ball tunneling through walls at high speed
+  const SUBSTEPS=4,sdt=dt/SUBSTEPS;
   const dynW=[];for(const wm of windmills)for(let b2=0;b2<2;b2++){const a=wm.angle+b2*Math.PI/2;dynW.push([wm.x-Math.cos(a)*wm.bladeLen,wm.y-Math.sin(a)*wm.bladeLen,wm.x+Math.cos(a)*wm.bladeLen,wm.y+Math.sin(a)*wm.bladeLen]);}
   const allW=[...holeWalls,...dynW];
-  for(let it=0;it<5;it++){for(const w of allW)resSeg(ball,w[0],w[1],w[2],w[3]);for(const o of currentHole.obstacles)if(o.type==='circle')resCirc(ball,o.x,o.y,o.r);}
+  for(let s=0;s<SUBSTEPS;s++){
+    ball.vx*=Math.pow(FRICTION,sdt);ball.vy*=Math.pow(FRICTION,sdt);
+    ball.x+=ball.vx*sdt;ball.y+=ball.vy*sdt;
+    for(let it=0;it<3;it++){for(const w of allW)resSeg(ball,w[0],w[1],w[2],w[3]);for(const o of currentHole.obstacles)if(o.type==='circle')resCirc(ball,o.x,o.y,o.r);}
+  }
   // Sand — extra friction when ball rolls in sand trap
   for(const o of currentHole.obstacles){
     if(o.type==='sand'&&inEllipse(ball.x,ball.y,o.x,o.y,o.rx,o.ry)){ball.vx*=0.87;ball.vy*=0.87;}
@@ -875,7 +898,17 @@ function ballSunk(){
   },600);
 }
 let _holeFinished=false,_inputBlocked=false,_transLocked=false,_waterCooldown=false,_notifTimer=null,_scoreSubmitted=false;
-function finishHole(){if(_holeFinished)return;if(!document.getElementById('gameScreen').classList.contains('active')&&!document.getElementById('reactionOverlay').style.display.includes('flex'))return;_holeFinished=true;if(rafId){cancelAnimationFrame(rafId);rafId=null;}holeIdx++;if(holeIdx>=TOTAL_HOLES){showFinal();return;}showTransition();}
+function finishHole(){
+  if(_holeFinished)return;
+  // Only block if we're on a totally unrelated screen (title/course/leaderboard)
+  const s=document.querySelector('.screen.active');
+  if(s&&(s.id==='titleScreen'||s.id==='courseScreen'||s.id==='leaderboardScreen'))return;
+  _holeFinished=true;
+  if(rafId){cancelAnimationFrame(rafId);rafId=null;}
+  holeIdx++;
+  if(holeIdx>=TOTAL_HOLES){showFinal();return;}
+  showTransition();
+}
 
 // ════════════════════ RENDER ═══════════════════════════════════════
 function render(){
@@ -929,14 +962,14 @@ function render(){
   // Ball
   if(ball.r>0){const r=ball.r;ctx.fillStyle='rgba(0,0,0,.32)';ctx.beginPath();ctx.ellipse(ball.x+3,ball.y+4,r,r*.6,0,0,Math.PI*2);ctx.fill();const bg=ctx.createRadialGradient(ball.x-r*.35,ball.y-r*.35,r*.04,ball.x,ball.y,r);bg.addColorStop(0,'#fff');bg.addColorStop(.5,'#f2f2f2');bg.addColorStop(1,'#ddd');ctx.fillStyle=bg;ctx.beginPath();ctx.arc(ball.x,ball.y,r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#f44336';ctx.lineWidth=r*.52;ctx.beginPath();ctx.arc(ball.x,ball.y,r*.38,0,Math.PI*2);ctx.stroke();ctx.fillStyle='rgba(255,255,255,.68)';ctx.beginPath();ctx.arc(ball.x-r*.3,ball.y-r*.3,r*.24,0,Math.PI*2);ctx.fill();}
 }
-function loop(ts){if(!lastTS)lastTS=ts;const dt=Math.min((ts-lastTS)/16.667,3);lastTS=ts;update(dt);render();rafId=requestAnimationFrame(loop);}
+function loop(ts){if(!lastTS)lastTS=ts;const dt=Math.min((ts-lastTS)/16.667,2);lastTS=ts;update(dt);render();rafId=requestAnimationFrame(loop);}
 
 // ════════════════════ INPUT ════════════════════════════════════════
 function getPos(e){const r=canvas.getBoundingClientRect();const cx=e.touches?e.touches[0].clientX:e.clientX,cy=e.touches?e.touches[0].clientY:e.clientY;return{x:(cx-r.left)*(740/r.width),y:(cy-r.top)*(460/r.height)};}
 canvas.addEventListener('mousedown',e=>{if(_inputBlocked||ballMoving||ball.sinking)return;const p=getPos(e);dragging=true;dragX=p.x;dragY=p.y;});
-canvas.addEventListener('mousemove',e=>{if(!dragging||ballMoving)return;const p=getPos(e);dragX=p.x;dragY=p.y;const dist=Math.hypot(ball.x-dragX,ball.y-dragY);document.getElementById('powerFill').style.width=(Math.min(dist*DRAG_SCALE/MAX_POWER,1)*100)+'%';});
-canvas.addEventListener('mouseup',  e=>{if(!dragging||_inputBlocked)return;const p=getPos(e);dragX=p.x;dragY=p.y;dragging=false;shoot();});
-canvas.addEventListener('mouseleave',()=>{if(dragging){dragging=false;document.getElementById('powerFill').style.width='0%';}});
+document.addEventListener('mousemove',e=>{if(!dragging||ballMoving)return;const p=getPos(e);dragX=p.x;dragY=p.y;const dist=Math.hypot(ball.x-dragX,ball.y-dragY);document.getElementById('powerFill').style.width=(Math.min(dist*DRAG_SCALE/MAX_POWER,1)*100)+'%';});
+document.addEventListener('mouseup',  e=>{if(!dragging||_inputBlocked)return;const p=getPos(e);dragX=p.x;dragY=p.y;dragging=false;shoot();});
+// mouseleave no longer cancels drag — drag continues outside canvas for full power
 canvas.addEventListener('touchstart',e=>{e.preventDefault();canvas.dispatchEvent(new MouseEvent('mousedown',{clientX:e.touches[0].clientX,clientY:e.touches[0].clientY}));},{passive:false});
 canvas.addEventListener('touchmove', e=>{e.preventDefault();canvas.dispatchEvent(new MouseEvent('mousemove',{clientX:e.touches[0].clientX,clientY:e.touches[0].clientY}));},{passive:false});
 canvas.addEventListener('touchend',  e=>{e.preventDefault();canvas.dispatchEvent(new MouseEvent('mouseup',{clientX:e.changedTouches[0].clientX,clientY:e.changedTouches[0].clientY}));},{passive:false});
@@ -971,7 +1004,14 @@ async function loadLeaderboardUI(course){
   setScreen('leaderboardScreen');
   document.getElementById('lbBody').innerHTML='<tr><td colspan="5" style="color:rgba(126,200,126,.5);padding:18px">Loading…</td></tr>';
   const rows=await(window._fbLoad?window._fbLoad(_lbCourse):Promise.resolve([]));
-  if(!rows.length){document.getElementById('lbBody').innerHTML='<tr><td colspan="5" style="color:rgba(126,200,126,.5);padding:18px">No scores yet!</td></tr>';return;}
+  if(rows===null){
+    const msg=window._fbLastError||'Unknown';
+    document.getElementById('lbBody').innerHTML='<tr><td colspan="5" style="color:#ef5350;padding:14px">'
+      +'⚠️ Could not load scores — check Firestore rules allow public read.<br>'
+      +'<small style="opacity:.5">'+msg+'</small></td></tr>';
+    return;
+  }
+  if(!rows.length){document.getElementById('lbBody').innerHTML='<tr><td colspan="5" style="color:rgba(126,200,126,.5);padding:18px">No scores yet — be the first!</td></tr>';return;}
   const medals=['🥇','🥈','🥉'];let html='';
   rows.forEach((r,i)=>{const ds=r.vsPar===0?'E':(r.vsPar>0?'+'+r.vsPar:''+r.vsPar);
   html+='<tr><td>'+(medals[i]||'#'+(i+1))+'</td><td style="text-align:left">'+(r.name||'—')+'</td><td><b>'+(r.score||'—')+'</b></td><td style="color:'+(r.vsPar<=0?'#4caf50':'#ef5350')+'">'+ds+'</td><td style="color:#fde74c">★ '+(r.correctCt||0)+'</td></tr>';});
