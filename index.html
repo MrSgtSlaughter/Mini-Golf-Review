@@ -316,7 +316,7 @@ body{background:#0d1a0c;font-family:'DM Mono',monospace;height:100vh;display:fle
       const r=await fetch(`${BASE}/${col}?key=${APIKEY}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
       if(!r.ok){const t=await r.text();window._fbLastError=t;return false;}
       return true;
-    }catch(e){window._fbLastError=e.message;return false;}
+    }catch(e){window._fbLastError=e.message;console.error('⛳ FB submit error:',e);return false;}
   };
 
   window._fbLoad=async()=>{
@@ -328,7 +328,7 @@ body{background:#0d1a0c;font-family:'DM Mono',monospace;height:100vh;display:fle
     }};
     try{
       const r=await fetch(`${BASE}:runQuery?key=${APIKEY}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(query)});
-      if(!r.ok){const t=await r.text();window._fbLastError=t;return null;}
+      if(!r.ok){const t=await r.text();window._fbLastError=t;console.error('⛳ FB load error:',t);return null;}
       const docs=await r.json();
       return docs
         .filter(d=>d.document)
@@ -342,7 +342,7 @@ body{background:#0d1a0c;font-family:'DM Mono',monospace;height:100vh;display:fle
             course:parseInt(f.course?.integerValue||1)
           };
         });
-    }catch(e){window._fbLastError=e.message;return null;}
+    }catch(e){window._fbLastError=e.message;console.error('⛳ FB load catch:',e);return null;}
   };
   console.log('⛳ Firebase REST ready — minigolf-fd9ea');
 })();
@@ -629,8 +629,11 @@ const HOLES_C3=[
  boundary:[[35,95],[475,95],[475,35],[705,35],[705,425],[415,425],[415,205],[35,205]],
  obstacles:[{type:'windmill',x:475,y:150,bladeLen:55,speed:0.022},{type:'sand',x:200,y:150,rx:38,ry:22},{type:'water',x:560,y:230,rx:35,ry:22}]},
 {name:'The Mirage',par:3,bg:'#2a5a28',start:[80,230],cup:[650,230],
- boundary:[[35,180],[705,180],[705,280],[35,280]],
- obstacles:[{type:'wall',x1:220,y1:180,x2:220,y2:248},{type:'wall',x1:380,y1:212,x2:380,y2:280},{type:'wall',x1:530,y1:180,x2:530,y2:248},{type:'sand',x:455,y:230,rx:32,ry:20}]},
+ boundary:[[35,155],[705,155],[705,305],[35,305]],
+ obstacles:[
+  {type:'wall',x1:260,y1:155,x2:260,y2:210},{type:'wall',x1:260,y1:250,x2:260,y2:305},
+  {type:'wall',x1:450,y1:155,x2:450,y2:210},{type:'wall',x1:450,y1:250,x2:450,y2:305},
+  {type:'sand',x:355,y:230,rx:34,ry:20}]},
 {name:'Dune Runner',par:4,bg:'#2a5a28',start:[80,120],cup:[655,340],
  boundary:[[35,65],[415,65],[415,230],[705,230],[705,400],[325,400],[325,185],[35,185]],
  obstacles:[{type:'sand',x:200,y:125,rx:45,ry:25},{type:'sand',x:540,y:315,rx:45,ry:25},{type:'water',x:370,y:230,rx:30,ry:18}]},
@@ -653,8 +656,11 @@ const HOLES_C3=[
  boundary:[[35,65],[430,65],[430,205],[705,205],[705,400],[310,400],[310,255],[35,255]],
  obstacles:[{type:'windmill',x:240,y:160,bladeLen:52,speed:0.023},{type:'windmill',x:530,y:305,bladeLen:52,speed:-0.020},{type:'sand',x:370,y:235,rx:40,ry:20}]},
 {name:'Silk Alley',par:3,bg:'#1e4d1c',start:[80,230],cup:[650,230],
- boundary:[[35,185],[705,185],[705,275],[35,275]],
- obstacles:[{type:'wall',x1:200,y1:185,x2:200,y2:253},{type:'wall',x1:370,y1:207,x2:370,y2:275},{type:'wall',x1:530,y1:185,x2:530,y2:253}]},
+ boundary:[[35,170],[705,170],[705,290],[35,290]],
+ obstacles:[
+  {type:'wall',x1:215,y1:170,x2:215,y2:215},{type:'wall',x1:215,y1:245,x2:215,y2:290},
+  {type:'wall',x1:380,y1:170,x2:380,y2:215},{type:'wall',x1:380,y1:245,x2:380,y2:290},
+  {type:'wall',x1:545,y1:170,x2:545,y2:215},{type:'wall',x1:545,y1:245,x2:545,y2:290}]},
 {name:'Dragon Gate',par:4,bg:'#2a5a28',start:[80,230],cup:[650,230],
  boundary:[[35,115],[705,115],[705,345],[35,345]],
  obstacles:[{type:'windmill',x:370,y:230,bladeLen:65,speed:0.028},{type:'circle',x:240,y:230,r:35},{type:'circle',x:500,y:230,r:35},{type:'sand',x:150,y:175,rx:35,ry:20},{type:'water',x:570,y:285,rx:35,ry:20}]},
@@ -663,7 +669,11 @@ const HOLES_C3=[
  obstacles:[{type:'circle',x:540,y:115,r:38},{type:'water',x:250,y:350,rx:40,ry:22},{type:'sand',x:450,y:230,rx:35,ry:20}]},
 {name:'The Labyrinth II',par:5,bg:'#2a5a28',start:[80,80],cup:[645,375],
  boundary:[[35,35],[705,35],[705,425],[35,425]],
- obstacles:[{type:'wall',x1:35,y1:155,x2:530,y2:155},{type:'wall',x1:175,y1:275,x2:705,y2:275},{type:'wall',x1:530,y1:35,x2:530,y2:155},{type:'wall',x1:175,y1:275,x2:175,y2:425},{type:'sand',x:590,y:90,rx:40,ry:28},{type:'water',x:100,y:350,rx:38,ry:25}]},
+ obstacles:[
+  {type:'wall',x1:35,y1:175,x2:520,y2:175},
+  {type:'wall',x1:185,y1:290,x2:705,y2:290},
+  // Start [80,80] top-left zone → right gap → middle → left gap → cup [645,375]
+{type:'sand',x:590,y:90,rx:40,ry:28},{type:'water',x:100,y:350,rx:38,ry:25}]},
 {name:'The Silk Road',par:4,bg:'#1e4d1c',start:[80,230],cup:[650,230],
  boundary:[[35,140],[705,140],[705,320],[35,320]],
  obstacles:[{type:'windmill',x:260,y:230,bladeLen:58,speed:0.025},{type:'sand',x:390,y:210,rx:42,ry:22},{type:'sand',x:390,y:270,rx:42,ry:22},{type:'windmill',x:520,y:230,bladeLen:52,speed:-0.022}]},
@@ -973,12 +983,15 @@ function update(dt){
   if(Math.hypot(ball.x-currentHole.cup[0],ball.y-currentHole.cup[1])<CUP_R&&Math.hypot(ball.vx,ball.vy)<CUP_SPEED){ball.sinking=true;SFX.sink();}
 }
 function resetBall(){
-  if(ball.sinking)return;
+  if(ball.sinking||ballMoving)return;
   scores[holeIdx]++;   // penalty stroke
-  ball.x=lastSafeX;ball.y=lastSafeY;
-  ball.vx=0;ball.vy=0;ballMoving=false;
+  // Return to tee box (not last safe pos — that could be mid-fairway)
+  ball.x=currentHole.start[0];ball.y=currentHole.start[1];
+  ball.vx=0;ball.vy=0;ballMoving=false;dragging=false;
+  lastSafeX=currentHole.start[0];lastSafeY=currentHole.start[1];
   waterPenaltyFlash=75;
-  document.getElementById('hudStats').textContent='Stroke '+scores[holeIdx]+' · ↺ Reset +1';
+  document.getElementById('hudStats').textContent='Stroke '+scores[holeIdx]+' · ↺ Tee +1';
+  updateHUD();
   SFX.bogey();
 }
 function shoot(){if(ball.sinking||ballMoving)return;const dx=ball.x-dragX,dy=ball.y-dragY,dist=Math.hypot(dx,dy);if(dist<5)return;const power=Math.min(dist*DRAG_SCALE,MAX_POWER);ball.vx=(dx/dist)*power;ball.vy=(dy/dist)*power;ballMoving=true;SFX.swing();scores[holeIdx]++;document.getElementById('hudStats').textContent='Stroke '+scores[holeIdx]+' · Hole '+(holeIdx+1);document.getElementById('powerFill').style.width='0%';}
@@ -1121,8 +1134,10 @@ async function submitToLeaderboard(){
     el.textContent='✅ Score submitted for '+name+'!';
     if(btn){btn.disabled=true;btn.textContent='Submitted ✓';}
   } else {
-    el.textContent='⚠️ Could not connect to leaderboard.';
-    if(btn){btn.disabled=false;btn.textContent='Submit 🏆';}
+    const errDetail=window._fbLastError?(" ("+String(window._fbLastError).slice(0,80)+")"):"";
+    el.textContent='⚠️ Submit failed'+errDetail+'. Check F12 console.';
+    console.error('⛳ Submit failed. _fbLastError:',window._fbLastError);
+    if(btn){btn.disabled=false;btn.textContent='Retry 🏆';}
   }
 }
 function openLeaderboard(){
@@ -1139,8 +1154,9 @@ async function loadLeaderboardUI(){
   lbBody.innerHTML='<tr><td colspan="6" style="color:rgba(126,200,126,.5);padding:18px">Loading…</td></tr>';
   const rows=await(window._fbLoad?window._fbLoad():Promise.resolve([]));
   if(!rows||rows===null){
-    const msg=window._fbLastError||'Connection error';
-    lbBody.innerHTML='<tr><td colspan="6" style="color:#ef5350;padding:14px">⚠️ '+msg+'</td></tr>';
+    const msg=String(window._fbLastError||'Connection error').slice(0,200);
+    console.error('⛳ LB load error:',window._fbLastError);
+    lbBody.innerHTML='<tr><td colspan="6" style="color:#ef5350;padding:14px;font-size:11px">⚠️ '+msg+'<br><small style="opacity:.6">Check browser console (F12) for details</small></td></tr>';
     return;
   }
   if(!rows.length){lbBody.innerHTML='<tr><td colspan="5" style="color:rgba(126,200,126,.5);padding:18px">No scores yet — be the first!</td></tr>';return;}
