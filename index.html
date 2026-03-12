@@ -193,47 +193,7 @@ body{background:#0d1a0c;font-family:'DM Mono',monospace;height:100vh;display:fle
       <span class="course-badge badge-exp">⚠️ EXPERT</span>
       <button class="tee-btn" style="font-size:13px;padding:10px 22px;margin-top:4px;background:linear-gradient(135deg,#b71c1c,#d32f2f)">Challenge 🐉</button>
     </div>
-    <div class="course-card" onclick="selectCourse(3)">
-      <div class="course-num" style="color:#ffd54f">Course 3</div>
-      <div class="course-title" style="color:#ffd54f">The Silk Road</div>
-      <div class="course-detail">18 Holes · Par 74<br>Randomized pins · New layouts<br>±2 strokes per question</div>
-      <span class="course-badge" style="background:#e65100;color:#fff">🗺️ NEW</span>
-      <button class="tee-btn" style="font-size:13px;padding:10px 22px;margin-top:4px;background:linear-gradient(135deg,#e65100,#ff8f00)">Explore 🗺️</button>
-    </div>
-  </div>
-  <button class="btn-outline" style="margin-top:14px" onclick="setScreen('titleScreen')">← Back</button>
-</div>
-
-<!-- TRANSITION -->
-<div id="transitionScreen" class="screen">
-  <div class="trans-label">Hole</div>
-  <div class="trans-num"   id="transNum">1</div>
-  <div class="trans-name"  id="transName">The Drive</div>
-  <div class="trans-par"   id="transPar">Par 2</div>
-  <div class="trans-score" id="transScore"></div>
-  <div class="trans-hint">Click anywhere to continue</div>
-</div>
-
-<!-- QUESTION -->
-<div id="questionScreen" class="screen">
-  <div class="q-header">
-    <span class="q-player-badge" id="qBadge">⛳ Answer to Tee Off</span>
-    <span class="q-type-badge"   id="qType">Multiple Choice</span>
-  </div>
-  <div class="q-body" id="qBody">
-    <div class="q-text" id="qText"></div>
-    <div class="q-feedback" id="qFeedback"></div>
-    <button class="q-continue-btn" id="qContinue" onclick="questionDone()">Continue to Tee ⛳</button>
-  </div>
-</div>
-
-<!-- GAME -->
-<div id="gameScreen" class="screen">
-  <div class="game-hud">
-    <div style="display:flex;flex-direction:column;gap:2px">
-      <div class="hud-name" id="hudName">Hole 1</div>
-      <div class="hud-par"  id="hudPar">Par 2 · Front 9</div>
-    </div>
+    
     <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
       <div class="hud-stats" id="hudStats">Stroke 0</div>
       <div class="hud-diff even" id="hudDiff">E</div>
@@ -620,72 +580,6 @@ const HOLES_C2=[
   {type:'sand',x:200,y:275,rx:38,ry:24}]}
 ];
 
-const HOLES_C3=[
-{name:'The Caravan',par:3,bg:'#2a5a28',start:[80,230],cup:[640,230],
- boundary:[[35,160],[705,160],[705,300],[35,300]],
- obstacles:[{type:'sand',x:220,y:230,rx:38,ry:22},{type:'water',x:420,y:230,rx:32,ry:22},{type:'sand',x:580,y:230,rx:30,ry:18}]},
-{name:'The Oasis',par:4,bg:'#1e4d1c',start:[80,150],cup:[620,360],
- boundary:[[35,95],[475,95],[475,35],[705,35],[705,425],[415,425],[415,205],[35,205]],
- obstacles:[{type:'windmill',x:475,y:150,bladeLen:55,speed:0.022},{type:'sand',x:200,y:150,rx:38,ry:22},{type:'water',x:560,y:230,rx:35,ry:22}]},
-{name:'The Mirage',par:3,bg:'#2a5a28',start:[80,230],cup:[650,230],
- boundary:[[35,155],[705,155],[705,305],[35,305]],
- obstacles:[
-  {type:'wall',x1:260,y1:155,x2:260,y2:210},{type:'wall',x1:260,y1:250,x2:260,y2:305},
-  {type:'wall',x1:450,y1:155,x2:450,y2:210},{type:'wall',x1:450,y1:250,x2:450,y2:305},
-  {type:'sand',x:355,y:230,rx:34,ry:20}]},
-{name:'Dune Runner',par:4,bg:'#2a5a28',start:[80,120],cup:[655,340],
- boundary:[[35,65],[415,65],[415,230],[705,230],[705,400],[325,400],[325,185],[35,185]],
- obstacles:[{type:'sand',x:200,y:125,rx:45,ry:25},{type:'sand',x:540,y:315,rx:45,ry:25},{type:'water',x:370,y:230,rx:30,ry:18}]},
-{name:'The Bazaar',par:4,bg:'#1e4d1c',start:[80,230],cup:[650,230],
- boundary:[[35,120],[705,120],[705,340],[35,340]],
- obstacles:[{type:'circle',x:230,y:195,r:28},{type:'circle',x:370,y:265,r:28},{type:'circle',x:510,y:195,r:28},{type:'sand',x:150,y:290,rx:35,ry:20},{type:'water',x:590,y:270,rx:32,ry:20}]},
-{name:'The Camel',par:4,bg:'#2a5a28',start:[620,360],cup:[120,115],
- boundary:[[35,55],[705,55],[705,415],[35,415]],
- obstacles:[{type:'windmill',x:240,y:235,bladeLen:60,speed:0.020},{type:'windmill',x:500,y:235,bladeLen:60,speed:-0.022},{type:'circle',x:370,y:235,r:32},{type:'sand',x:120,y:340,rx:40,ry:22},{type:'water',x:620,y:130,rx:38,ry:22}]},
-{name:'Sand Trap City',par:4,bg:'#1e4d1c',start:[80,230],cup:[650,230],
- boundary:[[35,130],[705,130],[705,330],[35,330]],
- obstacles:[{type:'sand',x:190,y:190,rx:40,ry:22},{type:'sand',x:190,y:270,rx:40,ry:22},{type:'sand',x:370,y:190,rx:40,ry:22},{type:'sand',x:370,y:270,rx:40,ry:22},{type:'water',x:555,y:230,rx:35,ry:22}]},
-{name:'The Keyhole',par:4,bg:'#2a5a28',start:[80,230],cup:[650,230],
- boundary:[[35,100],[705,100],[705,360],[35,360]],
- obstacles:[{type:'circle',x:370,y:230,r:68},{type:'sand',x:165,y:195,rx:38,ry:22},{type:'sand',x:575,y:265,rx:38,ry:22},{type:'water',x:165,y:300,rx:32,ry:20}]},
-{name:'The Crossroads',par:5,bg:'#1e4d1c',start:[80,230],cup:[650,230],
- boundary:[[35,175],[240,175],[240,55],[500,55],[500,175],[705,175],[705,285],[500,285],[500,415],[240,415],[240,285],[35,285]],
- obstacles:[{type:'windmill',x:370,y:230,bladeLen:62,speed:0.025},{type:'sand',x:160,y:230,rx:35,ry:20},{type:'water',x:580,y:230,rx:35,ry:20}]},
-{name:'The Pagoda',par:4,bg:'#2a5a28',start:[80,120],cup:[650,345],
- boundary:[[35,65],[430,65],[430,205],[705,205],[705,400],[310,400],[310,255],[35,255]],
- obstacles:[{type:'windmill',x:240,y:160,bladeLen:52,speed:0.023},{type:'windmill',x:530,y:305,bladeLen:52,speed:-0.020},{type:'sand',x:370,y:235,rx:40,ry:20}]},
-{name:'Silk Alley',par:3,bg:'#1e4d1c',start:[80,230],cup:[650,230],
- boundary:[[35,170],[705,170],[705,290],[35,290]],
- obstacles:[
-  {type:'wall',x1:215,y1:170,x2:215,y2:215},{type:'wall',x1:215,y1:245,x2:215,y2:290},
-  {type:'wall',x1:380,y1:170,x2:380,y2:215},{type:'wall',x1:380,y1:245,x2:380,y2:290},
-  {type:'wall',x1:545,y1:170,x2:545,y2:215},{type:'wall',x1:545,y1:245,x2:545,y2:290}]},
-{name:'Dragon Gate',par:4,bg:'#2a5a28',start:[80,230],cup:[650,230],
- boundary:[[35,115],[705,115],[705,345],[35,345]],
- obstacles:[{type:'windmill',x:370,y:230,bladeLen:65,speed:0.028},{type:'circle',x:240,y:230,r:35},{type:'circle',x:500,y:230,r:35},{type:'sand',x:150,y:175,rx:35,ry:20},{type:'water',x:570,y:285,rx:35,ry:20}]},
-{name:'The Temple',par:4,bg:'#1e4d1c',start:[80,350],cup:[635,110],
- boundary:[[35,285],[390,285],[390,55],[705,55],[705,175],[510,175],[510,415],[35,415]],
- obstacles:[{type:'circle',x:540,y:115,r:38},{type:'water',x:250,y:350,rx:40,ry:22},{type:'sand',x:450,y:230,rx:35,ry:20}]},
-{name:'The Labyrinth II',par:5,bg:'#2a5a28',start:[80,80],cup:[645,375],
- boundary:[[35,35],[705,35],[705,425],[35,425]],
- obstacles:[
-  {type:'wall',x1:35,y1:175,x2:520,y2:175},
-  {type:'wall',x1:185,y1:290,x2:705,y2:290},
-  // Start [80,80] top-left zone → right gap → middle → left gap → cup [645,375]
-{type:'sand',x:590,y:90,rx:40,ry:28},{type:'water',x:100,y:350,rx:38,ry:25}]},
-{name:'The Silk Road',par:4,bg:'#1e4d1c',start:[80,230],cup:[650,230],
- boundary:[[35,140],[705,140],[705,320],[35,320]],
- obstacles:[{type:'windmill',x:260,y:230,bladeLen:58,speed:0.025},{type:'sand',x:390,y:210,rx:42,ry:22},{type:'sand',x:390,y:270,rx:42,ry:22},{type:'windmill',x:520,y:230,bladeLen:52,speed:-0.022}]},
-{name:'The Moat',par:4,bg:'#2a5a28',start:[80,230],cup:[650,230],
- boundary:[[35,100],[705,100],[705,360],[35,360]],
- obstacles:[{type:'circle',x:370,y:230,r:42},{type:'water',x:370,y:155,rx:55,ry:18},{type:'water',x:370,y:305,rx:55,ry:18},{type:'sand',x:160,y:230,rx:35,ry:20}]},
-{name:"The Emperor's Road",par:5,bg:'#1e4d1c',start:[80,200],cup:[625,360],
- boundary:[[35,130],[490,130],[490,55],[705,55],[705,425],[380,425],[380,265],[35,265]],
- obstacles:[{type:'windmill',x:240,y:200,bladeLen:58,speed:0.022},{type:'circle',x:440,y:195,r:35},{type:'windmill',x:560,y:310,bladeLen:55,speed:-0.020},{type:'water',x:300,y:350,rx:40,ry:22},{type:'sand',x:620,y:175,rx:35,ry:20}]},
-{name:'The Great Wall',par:6,bg:'#2a5a28',start:[80,230],cup:[685,135],
- boundary:[[35,110],[705,110],[705,350],[35,350]],
- obstacles:[{type:'windmill',x:200,y:230,bladeLen:62,speed:0.025},{type:'circle',x:320,y:195,r:30},{type:'water',x:370,y:265,rx:38,ry:20},{type:'windmill',x:440,y:230,bladeLen:58,speed:-0.023},{type:'circle',x:540,y:195,r:30},{type:'water',x:590,y:265,rx:35,ry:20},{type:'windmill',x:650,y:230,bladeLen:50,speed:0.020}]}
-];
 const TOTAL_HOLES=18;
 let HOLES=HOLES_C1, TOTAL_PAR=HOLES_C1.reduce((a,h)=>a+h.par,0);
 
@@ -839,55 +733,15 @@ const CUPS_C1={
   17:[[660,230],[660,195],[660,265]],
   18:[[660,230],[660,185],[660,275]]
 };
-function isCupPosSafe(cx,cy,hole){
-  const CUP_R=13,bpts=hole.boundary;
-  const xs=bpts.map(p=>p[0]),ys=bpts.map(p=>p[1]);
-  const bx1=Math.min(...xs),by1=Math.min(...ys),bx2=Math.max(...xs),by2=Math.max(...ys);
-  if(cx<bx1+CUP_R||cx>bx2-CUP_R||cy<by1+CUP_R||cy>by2-CUP_R)return false;
-  for(const o of hole.obstacles){
-    if(o.type==='windmill'){if(Math.hypot(cx-o.x,cy-o.y)<o.bladeLen+CUP_R+12)return false;}
-    else if(o.type==='circle'){if(Math.hypot(cx-o.x,cy-o.y)<o.r+CUP_R+12)return false;}
-    else if(o.type==='water'||o.type==='sand'){if(((cx-o.x)/o.rx)**2+((cy-o.y)/o.ry)**2<1.3)return false;}
-  }
-  return true;
-}
-const CUPS_C3={
-  1:[[640,230],[685,230],[685,200]],
-  2:[[620,360],[685,230],[620,320]],
-  3:[[650,230],[685,230],[685,200]],
-  4:[[655,340],[685,202],[650,375]],
-  5:[[650,230],[685,230],[685,200]],
-  6:[[120,115],[685,235],[685,205]],
-  7:[[650,230],[685,230],[685,200]],
-  8:[[650,230],[685,230],[685,200]],
-  9:[[650,230],[685,235],[685,205]],
-  10:[[650,345],[685,202],[650,375]],
-  11:[[650,230],[685,230],[685,200]],
-  12:[[650,230],[685,230],[685,200]],
-  13:[[635,110],[685,235],[685,205]],
-  14:[[645,375],[685,230],[685,200]],
-  15:[[650,230],[685,230],[685,200]],
-  16:[[650,230],[685,230],[685,200]],
-  18:[[685,135],[685,325],[665,135]]
-};
 function randomizeC1Cups(){
   HOLES_C1.forEach((h,i)=>{
     const opts=CUPS_C1[i+1];if(!opts)return;
-    const valid=opts.filter(p=>isCupPosSafe(p[0],p[1],h));
-    h.cup=(valid.length?valid:opts)[Math.floor(Math.random()*(valid.length||opts.length))];
-  });
-}
-function randomizeC3Cups(){
-  HOLES_C3.forEach((h,i)=>{
-    const opts=CUPS_C3[i+1];if(!opts)return;
-    // Validate all options, pick a safe one
-    const valid=opts.filter(p=>isCupPosSafe(p[0],p[1],h));
-    h.cup=(valid.length?valid:opts)[Math.floor(Math.random()*(valid.length||opts.length))];
+    h.cup=opts[Math.floor(Math.random()*opts.length)];
   });
 }
 
 function selectCourse(n){
-  currentCourse=n;bonusAmt=(n===2||n===3)?2:1;
+  currentCourse=n;bonusAmt=n===2?2:1;
   // Full state reset — prevent stale timers/flags bleeding into new game
   _holesCompleted=0;_questionsAnswered=0;_scoreSubmitted=false;
   _holeFinished=true;   // Stale notifTimer guard: prevents old timer from calling finishHole
@@ -895,8 +749,7 @@ function selectCourse(n){
   if(rafId){cancelAnimationFrame(rafId);rafId=null;}
   ballMoving=false;dragging=false;_inputBlocked=false;_waterCooldown=false;
   if(n===1)randomizeC1Cups();
-  if(n===3)randomizeC3Cups();
-  HOLES=n===3?HOLES_C3:(n===2?HOLES_C2:HOLES_C1);
+  HOLES=n===2?HOLES_C2:HOLES_C1;
   TOTAL_PAR=HOLES.reduce((a,h)=>a+h.par,0);
   scores=Array(TOTAL_HOLES).fill(0);bonuses=Array(TOTAL_HOLES).fill(0);
   correctCt=0;usedQIdxs=[];holeIdx=0;
@@ -922,7 +775,7 @@ function showTransition(){
 function pickQ(){let pool=QUESTIONS.map((_,i)=>i).filter(i=>!usedQIdxs.slice(-8).includes(i));if(!pool.length)pool=QUESTIONS.map((_,i)=>i);const idx=pool[Math.floor(Math.random()*pool.length)];usedQIdxs.push(idx);if(usedQIdxs.length>30)usedQIdxs.shift();return QUESTIONS[idx];}
 function showQuestion(){
   const q=pickQ();
-  document.getElementById('qBadge').textContent=(currentCourse===3?'🗺️':currentCourse===2?'🐉':'⛳')+' '+playerName+' — Hole '+(holeIdx+1)+' of '+TOTAL_HOLES+(currentCourse===2?' · Expert':'');
+  document.getElementById('qBadge').textContent=(currentCourse===2?'🐉':'⛳')+' '+playerName+' — Hole '+(holeIdx+1)+' of '+TOTAL_HOLES+(currentCourse===2?' · Expert':'');
   document.getElementById('qType').textContent=q.type==='mc'?'Multiple Choice':'Fill in the Blank';
   document.getElementById('qText').textContent=q.q;
   const body=document.getElementById('qBody');
@@ -1153,7 +1006,7 @@ canvas.addEventListener('touchend',  e=>{e.preventDefault();canvas.dispatchEvent
 // Escape-key hole skip removed
 
 // ════════════════════ SCORECARD / LEADERBOARD ══════════════════════
-function showFinal(){if(rafId){cancelAnimationFrame(rafId);rafId=null;}let html='<thead><tr><th>#</th>';for(let i=0;i<TOTAL_HOLES;i++)html+='<th style="font-size:9px;padding:5px 7px">'+(i+1)+'</th>';html+='<th>F9</th><th>B9</th><th>Total</th></tr></thead><tbody>';html+='<tr><td style="text-align:left;color:#f44336;font-size:12px">'+playerName+'</td>';let f9=0,b9=0;for(let i=0;i<TOTAL_HOLES;i++){const s=effScore(i),lbl=scoreLbl(s,HOLES[i].par),bm=bonuses[i]<0?'★':(bonuses[i]>0?'!':'');if(i<9)f9+=s;else b9+=s;html+='<td class="'+lbl.c+'" style="font-size:10px;padding:4px 6px">'+s+bm+'</td>';}const tot=f9+b9,diff=tot-TOTAL_PAR,ds=diff===0?'E':(diff>0?'+'+diff:''+diff);html+='<td><b>'+f9+'</b></td><td><b>'+b9+'</b></td><td><b>'+tot+'</b><br><small style="color:#7ec87e">('+ds+')</small></td></tr>';html+='<tr style="opacity:.4"><td style="text-align:left;font-size:10px;color:#7ec87e">Par</td>';let pf=0,pb=0;for(let i=0;i<TOTAL_HOLES;i++){const p=HOLES[i].par;i<9?pf+=p:pb+=p;html+='<td style="font-size:10px;padding:4px 6px">'+p+'</td>';}html+='<td>'+pf+'</td><td>'+pb+'</td><td>'+(pf+pb)+'</td></tr>';html+='</tbody><tfoot><tr><td colspan="'+(TOTAL_HOLES+4)+'" style="font-size:9px;color:rgba(126,200,126,.4);padding:6px 10px;text-align:left">★ correct (−'+bonusAmt+' stroke)  |  ! wrong (+'+bonusAmt+' stroke)  |  Correct: '+correctCt+'/'+TOTAL_HOLES+'</td></tr></tfoot>';document.getElementById('finalTable').innerHTML=html;document.getElementById('finalCourseTag').textContent=currentCourse===3?'🗺️ Course 3 — The Silk Road':currentCourse===2?'🐉 Course 2 — The Dragon\'s Back':'⛳ Course 1 — The Ancient Road';
+function showFinal(){if(rafId){cancelAnimationFrame(rafId);rafId=null;}let html='<thead><tr><th>#</th>';for(let i=0;i<TOTAL_HOLES;i++)html+='<th style="font-size:9px;padding:5px 7px">'+(i+1)+'</th>';html+='<th>F9</th><th>B9</th><th>Total</th></tr></thead><tbody>';html+='<tr><td style="text-align:left;color:#f44336;font-size:12px">'+playerName+'</td>';let f9=0,b9=0;for(let i=0;i<TOTAL_HOLES;i++){const s=effScore(i),lbl=scoreLbl(s,HOLES[i].par),bm=bonuses[i]<0?'★':(bonuses[i]>0?'!':'');if(i<9)f9+=s;else b9+=s;html+='<td class="'+lbl.c+'" style="font-size:10px;padding:4px 6px">'+s+bm+'</td>';}const tot=f9+b9,diff=tot-TOTAL_PAR,ds=diff===0?'E':(diff>0?'+'+diff:''+diff);html+='<td><b>'+f9+'</b></td><td><b>'+b9+'</b></td><td><b>'+tot+'</b><br><small style="color:#7ec87e">('+ds+')</small></td></tr>';html+='<tr style="opacity:.4"><td style="text-align:left;font-size:10px;color:#7ec87e">Par</td>';let pf=0,pb=0;for(let i=0;i<TOTAL_HOLES;i++){const p=HOLES[i].par;i<9?pf+=p:pb+=p;html+='<td style="font-size:10px;padding:4px 6px">'+p+'</td>';}html+='<td>'+pf+'</td><td>'+pb+'</td><td>'+(pf+pb)+'</td></tr>';html+='</tbody><tfoot><tr><td colspan="'+(TOTAL_HOLES+4)+'" style="font-size:9px;color:rgba(126,200,126,.4);padding:6px 10px;text-align:left">★ correct (−'+bonusAmt+' stroke)  |  ! wrong (+'+bonusAmt+' stroke)  |  Correct: '+correctCt+'/'+TOTAL_HOLES+'</td></tr></tfoot>';document.getElementById('finalTable').innerHTML=html;document.getElementById('finalCourseTag').textContent=currentCourse===2?'🐉 Course 2 — The Dragon\'s Back':'⛳ Course 1 — The Ancient Road';
 document.getElementById('submitName').value=playerName;document.getElementById('submitStatus').textContent='';const sb=document.querySelector('.btn-gold');if(sb){sb.disabled=false;sb.textContent='Submit 🏆';}setScreen('finalScreen');}
 async function submitToLeaderboard(){
   if(_scoreSubmitted)return;
@@ -1202,7 +1055,7 @@ async function loadLeaderboardUI(){
   if(!rows.length){lbBody.innerHTML='<tr><td colspan="5" style="color:rgba(126,200,126,.5);padding:18px">No scores yet — be the first!</td></tr>';return;}
   const medals=['🥇','🥈','🥉'];let html='';
   rows.forEach((r,i)=>{const ds=r.vsPar===0?'E':(r.vsPar>0?'+'+r.vsPar:''+r.vsPar);
-  const cEmoji=r.course===3?'🗺️':r.course===2?'🐉':'⛳';
+  const cEmoji=r.course===2?'🐉':'⛳';
   html+='<tr><td>'+(medals[i]||'#'+(i+1))+'</td><td style="font-size:16px;text-align:center">'+cEmoji+'</td><td style="text-align:left">'+(r.name||'—')+'</td><td><b>'+(r.score||'—')+'</b></td><td style="color:'+(r.vsPar<=0?'#4caf50':'#ef5350')+'">'+ds+'</td><td style="color:#fde74c">'+(r.correctCt||0)+'</td></tr>';
 });
   lbBody.innerHTML=html;
